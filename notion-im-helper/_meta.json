@@ -1,0 +1,8 @@
+{
+  "ownerId": "kn70pywhg0fyz996kpa8xj89s57yhv26",
+  "slug": "notion-im-helper",
+  "version": "1.0.0",
+  "publishedAt": 1773976351000,
+  "name": "notion-im-helper",
+  "description": "通过 IM 向 Notion 添加内容，支持闪念速记、待办清单、标题、引用、列表等多种格式"
+}
