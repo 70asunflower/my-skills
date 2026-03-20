@@ -1,0 +1,15 @@
+{
+  "ownerId": "kn70pywhg0fyz996kpa8xj89s57yhv26",
+  "slug": "message-friendly",
+  "version": "1.0.0",
+  "publishedAt": 1773975528000,
+  "name": "message-friendly",
+  "description": "Optimizes Markdown-formatted messages for IM platforms",
+  "trigger": "auto",
+  "priority": 10,
+  "filter": {
+    "channel": ["wechat", "dingtalk", "im"],
+    "response_contains": ["# ", "## ", "### ", "**", "*", "```", "|", "- [ ]", "> "]
+  },
+  "action": "optimize_markdown_for_im"
+}
