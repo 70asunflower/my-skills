@@ -11,6 +11,15 @@ import time
 import re
 from datetime import datetime
 
+# 彻底清除所有代理环境变量（大小写都要清除）
+proxy_vars = [
+    'http_proxy', 'https_proxy', 'ftp_proxy', 'all_proxy',
+    'HTTP_PROXY', 'HTTPS_PROXY', 'FTP_PROXY', 'ALL_PROXY',
+    'no_proxy', 'NO_PROXY'
+]
+for var in proxy_vars:
+    os.environ.pop(var, None)
+
 # 尝试导入 notion_client，未安装时给出友好提示
 try:
     from notion_client import Client, APIResponseError
@@ -108,12 +117,16 @@ _client = None
 
 
 def get_client() -> Client:
-    """获取 Notion Client 单例"""
+    """获取 Notion Client 单例（禁用代理，直连 Notion API）"""
     global _client
     if _client is None:
         if not NOTION_API_KEY:
             output_error("CONFIG", "NOTION_API_KEY 未配置")
             sys.exit(1)
+        # 清除代理环境变量，直连 Notion API
+        import httpx
+        for var in ['HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'NO_PROXY']:
+            os.environ.pop(var, None)
         _client = Client(auth=NOTION_API_KEY)
     return _client
 
