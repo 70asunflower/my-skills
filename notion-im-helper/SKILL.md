@@ -37,22 +37,22 @@ metadata:
 
 | 前缀/关键词特征 | 示例 | 触发的功能 | 对应脚本调用格式 |
 |-------------|------|-----------|--------------|
-| `日记:` / `今天:` / 无前缀 | `今天天气好` | 日记（**默认模式**）| `python3 add_record.py "内容" --type diary` |
-| `笔记:` / `学习:` | `笔记: Python装饰器` | 学习笔记 | `python3 add_record.py "内容" --type note` |
-| `闪念:` / `flash:` | `突然想到个点子` | 闪念/想法 | `python3 add_record.py "内容" --type flash` |
-| `想法:` / `灵感:` | `灵感: 做个工具` | 灵感记录 | `python3 add_record.py "内容" --type idea` |
-| `问题:` / `疑问:` | `疑问: 为什么报错` | 记录问题 | `python3 add_record.py "内容" --type question` |
-| `总结:` / `回顾:` | `这周学了...` | 周/月总结 | `python3 add_record.py "内容" --type summary` |
-| `待办:` / `todo:` / `t` | `todo: 买牛奶` | 待办清单 | `python3 add_todo.py "内容"` |
-| `任务:` / `task:` | `task: 写周报` | 任务 | `python3 add_todo.py "内容" --type task` |
-| `√` / `✓` / `done:` | `√ 写周报` | 已完成的待办 | `python3 add_todo.py "内容" --done` |
-| `链接:` / `link:` / 纯URL | `https://...` | 网页书签 | `python3 add_link.py "网址URL"` |
-| `摘抄:` / `quote:` / `>` | `> 这句话真好` | 引用块 | `python3 add_quote.py "引用文本"` |
-| `*` / `**` / `***` | `*周报` | 多级标题 | `python3 add_heading.py <级别1-3> "标题"` |
-| `- ` (短横+空格) | `- 苹果` | 无序列表 | `python3 add_list.py bullet "文本"` |
-| `1. ` / `2. ` 等 | `1. 第一步` | 有序列表 | `python3 add_list.py number "文本"` |
-| `下拉:` / `toggle:` | `下拉: 计划` | 下拉列表 | （通过管道传 JSON 至 `add_toggle.py`） |
-| `搜:` / `search:` | `搜: API` | 搜索笔记 | `python3 search_notes.py "关键字"` |
+| 日记:` / `今天:` / 无前缀 | `今天天气好` | 日记（**默认模式**）| `python3 '{SKILL_DIR}/scripts/add_record.py' "内容" --type diary` |
+| `笔记:` / `学习:` | `笔记: Python装饰器` | 学习笔记 | `python3 '{SKILL_DIR}/scripts/add_record.py' "内容" --type note` |
+| `闪念:` / `flash:` | `突然想到个点子` | 闪念/想法 | `python3 '{SKILL_DIR}/scripts/add_record.py' "内容" --type flash` |
+| `想法:` / `灵感:` | `灵感: 做个工具` | 灵感记录 | `python3 '{SKILL_DIR}/scripts/add_record.py' "内容" --type idea` |
+| `问题:` / `疑问:` | `疑问: 为什么报错` | 记录问题 | `python3 '{SKILL_DIR}/scripts/add_record.py' "内容" --type question` |
+| `总结:` / `回顾:` | `这周学了...` | 周/月总结 | `python3 '{SKILL_DIR}/scripts/add_record.py' "内容" --type summary` |
+| `待办:` / `todo:` / `t` | `todo: 买牛奶` | 待办清单 | `python3 '{SKILL_DIR}/scripts/add_todo.py' "内容"` |
+| `任务:` / `task:` | `task: 写周报` | 任务 | `python3 '{SKILL_DIR}/scripts/add_todo.py' "内容" --type task` |
+| `√` / `✓` / `done:` | `√ 写周报` | 已完成的待办 | `python3 '{SKILL_DIR}/scripts/add_todo.py' "内容" --done` |
+| `链接:` / `link:` / 纯URL | `https://...` | 网页书签 | `python3 '{SKILL_DIR}/scripts/add_link.py' "网址URL"` |
+| `摘抄:` / `quote:` / `>` | `> 这句话真好` | 引用块 | `python3 '{SKILL_DIR}/scripts/add_quote.py' "引用文本"` |
+| `*` / `**` / `***` | `*周报` | 多级标题 | `python3 '{SKILL_DIR}/scripts/add_heading.py' <级别1-3> "标题"` |
+| `- ` (短横+空格) | `- 苹果` | 无序列表 | `python3 '{SKILL_DIR}/scripts/add_list.py' bullet "文本"` |
+| `1. ` / `2. ` 等 | `1. 第一步` | 有序列表 | `python3 '{SKILL_DIR}/scripts/add_list.py' number "文本"` |
+| `下拉:` / `toggle:` | `下拉: 计划` | 下拉列表 | （通过管道传 JSON 至 `'{SKILL_DIR}/scripts/add_toggle.py'`） |
+| `搜:` / `search:` | `搜: API` | 搜索笔记 | `python3 '{SKILL_DIR}/scripts/search_notes.py' "关键字"` |
 
 ### 🤖 智能多行解析与默认模式（极其重要）
 如果你收到一段话，**没有任何明显的前缀**（例如直接发了一句“今天发生了一件开心的事” 或 “Python的GIL是什么”），请发挥语义理解能力盲猜：
