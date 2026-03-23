@@ -326,6 +326,42 @@ def append_blocks(blocks: list, page_id: str = None):
     )
 
 
+def append_im_blocks(blocks: list, page_id: str = None, type_key: str = None, tag: str = None, project: str = None):
+    """
+    针对 IM 系统消息的聚合追加逻辑。
+    1. 自动与本地 `.last_date` 进行比对，若跨天则插入 `---` 分割线。
+    2. 如果提供了 type_key，则自动在消息体前额外插入一条彩色抬头块（包含时间、Emoji、标签和项目）。
+    """
+    new_blocks = []
+    
+    # 存放在用户主目录的 .qclaw/workspace 中，符合 QClaw 用户的个人配置习惯
+    home_dir = os.path.expanduser("~")
+    state_dir = os.path.join(home_dir, ".qclaw", "workspace", "notion-im-helper")
+    os.makedirs(state_dir, exist_ok=True)
+    last_date_file = os.path.join(state_dir, ".last_date")
+    
+    today_str = get_today_str()
+    last_date = ""
+    if os.path.exists(last_date_file):
+        with open(last_date_file, "r", encoding="utf-8") as f:
+            last_date = f.read().strip()
+            
+    # 如果跨天了，先插入一条分割线，并更新文件
+    if last_date != today_str:
+        new_blocks.append(make_divider_block())
+        with open(last_date_file, "w", encoding="utf-8") as f:
+            f.write(today_str)
+            
+    # 判断并生成专属抬头
+    if type_key:
+        header_block = build_header_block(type_key, tag, project)
+        new_blocks.append(header_block)
+        
+    new_blocks.extend(blocks)
+    
+    return append_blocks(new_blocks, page_id=page_id)
+
+
 # ──────────────────────────────────────────────
 # 读取页面内容块
 # ──────────────────────────────────────────────
@@ -395,15 +431,40 @@ def get_today_str() -> str:
 # 标签/项目 参数解析工具
 # ──────────────────────────────────────────────
 
+TYPE_CONFIG = {
+    "flash": {"emoji": "💭", "color": "gray"},
+    "diary": {"emoji": "📅", "color": "blue"},
+    "todo": {"emoji": "✅", "color": "red"},
+    "done": {"emoji": "✔️", "color": "green"},
+    "note": {"emoji": "📝", "color": "yellow"},
+    "idea": {"emoji": "💡", "color": "orange"},
+    "question": {"emoji": "❓", "color": "purple"},
+    "quote": {"emoji": "📖", "color": "green"},
+    "link": {"emoji": "🔗", "color": "gray"},
+    "task": {"emoji": "🎯", "color": "red"},
+    "summary": {"emoji": "📊", "color": "blue"},
+    "heading": {"emoji": "📌", "color": "default"},
+    "list": {"emoji": "📌", "color": "default"},
+    "toggle": {"emoji": "📂", "color": "default"},
+}
+
+PROJECT_CONFIG = {
+    "工作": {"emoji": "💼", "color": "blue"},
+    "工作项目": {"emoji": "💼", "color": "blue"},
+    "学习": {"emoji": "📚", "color": "green"},
+    "学习项目": {"emoji": "📚", "color": "green"},
+    "读书": {"emoji": "📖", "color": "purple"},
+    "读书项目": {"emoji": "📖", "color": "purple"},
+}
+
 def parse_metadata_args(args: list) -> tuple:
     """
-    从命令行参数中解析 --tag、--project 和 --claw。
-    返回 (remaining_args, tag, project, claw)。
-    --claw 未指定时回退到环境变量 OPENCLAW_CLAW_NAME。
+    从命令行参数中解析 --tag 和 --project。
+    返回 (remaining_args, tag, project)。
+    丢弃了之前的 claw 概念。
     """
     tag = None
     project = None
-    claw = None
     remaining = []
     i = 0
     while i < len(args):
@@ -413,25 +474,38 @@ def parse_metadata_args(args: list) -> tuple:
         elif args[i] == "--project" and i + 1 < len(args):
             project = args[i + 1]
             i += 2
-        elif args[i] == "--claw" and i + 1 < len(args):
-            claw = args[i + 1]
+        elif args[i] in ("--claw", "--source") and i + 1 < len(args):
+            # 直接丢弃旧版的 claw 和 source 标识参数及其值
+            i += 2
+        elif args[i] == "--content" and i + 1 < len(args):
+            remaining.append(args[i + 1])
             i += 2
         else:
             remaining.append(args[i])
             i += 1
-    # 未通过参数指定 claw 时，回退到环境变量
-    if not claw and OPENCLAW_CLAW_NAME:
-        claw = OPENCLAW_CLAW_NAME
-    return remaining, tag, project, claw
+    return remaining, tag, project
 
 
-def build_metadata_suffix(tag: str = None, project: str = None, claw: str = None) -> str:
-    """构建标签/项目/Claw来源的后缀文本"""
-    parts = []
-    if claw:
-        parts.append(f"📌{claw}")
+def build_header_block(type_key: str, tag: str = None, project: str = None) -> dict:
+    """
+    构建标准化的双行/多行结构的首行抬头（Paragraph Block）。
+    格式示例：10:30 📅  #标签 💼【项目】
+    整体文字颜色由 type_key 决定。
+    """
+    config = TYPE_CONFIG.get(type_key, {"emoji": "💬", "color": "default"})
+    time_str = datetime.now().strftime("%H:%M")
+    emoji = config["emoji"]
+    color = config["color"]
+    
+    parts = [f"{time_str} {emoji}"]
     if tag:
         parts.append(f"#{tag}")
     if project:
-        parts.append(f"【{project}】")
-    return " ".join(parts)
+        proj_emoji = PROJECT_CONFIG.get(project, {}).get("emoji", "")
+        if proj_emoji:
+            parts.append(f"{proj_emoji}【{project}】")
+        else:
+            parts.append(f"【{project}】")
+            
+    text_content = "  ".join(parts)
+    return make_paragraph_block(text_content, color=color)

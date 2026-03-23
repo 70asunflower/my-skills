@@ -18,11 +18,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from notion_helper import (
     check_required_config,
     make_heading_block,
-    append_blocks,
+    append_im_blocks,
     output_ok,
     output_error,
     parse_metadata_args,
-    build_metadata_suffix,
 )
 
 
@@ -39,7 +38,7 @@ def main():
     # 第一个参数是标题级别
     level_str = args[0]
     remaining_args = args[1:]
-    remaining, tag, project, _claw = parse_metadata_args(remaining_args)
+    remaining, tag, project = parse_metadata_args(remaining_args)
 
     try:
         level = int(level_str)
@@ -54,12 +53,9 @@ def main():
         return
 
     text = " ".join(remaining)
-    meta_suffix = build_metadata_suffix(tag, project)
-    if meta_suffix:
-        text += f"  {meta_suffix}"
 
     blocks = [make_heading_block(level, text)]
-    append_blocks(blocks)
+    append_im_blocks(blocks, type_key="heading", tag=tag, project=project)
     output_ok(f"已添加 H{level} 标题：{remaining[0]}")
 
 

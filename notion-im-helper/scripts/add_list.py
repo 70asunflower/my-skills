@@ -17,11 +17,10 @@ from notion_helper import (
     check_required_config,
     make_bulleted_list_block,
     make_numbered_list_block,
-    append_blocks,
+    append_im_blocks,
     output_ok,
     output_error,
     parse_metadata_args,
-    build_metadata_suffix,
 )
 
 
@@ -37,7 +36,7 @@ def main():
 
     list_type = args[0].lower()
     remaining_args = args[1:]
-    remaining, tag, project, _claw = parse_metadata_args(remaining_args)
+    remaining, tag, project = parse_metadata_args(remaining_args)
 
     if list_type not in ("bullet", "number"):
         output_error("ARGS", f"列表类型必须是 bullet 或 number，收到: {list_type}")
@@ -47,15 +46,11 @@ def main():
         output_error("ARGS", "缺少列表项")
         return
 
-    meta_suffix = build_metadata_suffix(tag, project)
-
     blocks = []
     for item in remaining:
         text = item.strip()
         if not text:
             continue
-        if meta_suffix:
-            text += f"  {meta_suffix}"
         if list_type == "bullet":
             blocks.append(make_bulleted_list_block(text))
         else:
@@ -65,7 +60,7 @@ def main():
         output_error("ARGS", "缺少列表项")
         return
 
-    append_blocks(blocks)
+    append_im_blocks(blocks, type_key="list", tag=tag, project=project)
     type_name = "无序列表" if list_type == "bullet" else "有序列表"
     output_ok(f"已添加 {len(blocks)} 条{type_name}项")
 

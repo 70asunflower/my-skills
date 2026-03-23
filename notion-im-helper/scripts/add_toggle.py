@@ -32,12 +32,11 @@ from notion_helper import (
     check_required_config,
     make_toggle_block,
     make_bulleted_list_block,
-    append_blocks,
+    append_im_blocks,
     output_ok,
     output_error,
     log_debug,
     parse_metadata_args,
-    build_metadata_suffix,
 )
 
 
@@ -66,7 +65,7 @@ def main():
 
     # 解析命令行参数中的 metadata
     args = sys.argv[1:]
-    _, tag, project, _claw = parse_metadata_args(args)
+    _, tag, project = parse_metadata_args(args)
 
     # 从 stdin 读取 JSON
     try:
@@ -85,10 +84,6 @@ def main():
         output_error("ARGS", "缺少 title 字段")
         return
 
-    meta_suffix = build_metadata_suffix(tag, project)
-    if meta_suffix:
-        title += f"  {meta_suffix}"
-
     children_data = data.get("children", [])
 
     # 构建子块
@@ -96,7 +91,7 @@ def main():
 
     # 创建 Toggle 块
     toggle = make_toggle_block(title, children=children_blocks)
-    append_blocks([toggle])
+    append_im_blocks([toggle], type_key="toggle", tag=tag, project=project)
 
     child_count = len(children_data) if children_data else 0
     output_ok(f"已添加下拉列表：{data.get('title', '')}（{child_count} 个子项）")

@@ -17,11 +17,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from notion_helper import (
     check_required_config,
     make_todo_block,
-    append_blocks,
+    append_im_blocks,
     output_ok,
     output_error,
     parse_metadata_args,
-    build_metadata_suffix,
 )
 
 
@@ -36,14 +35,20 @@ def main():
     if "--done" in args:
         checked = True
         args.remove("--done")
+        
+    type_key = "todo"
+    if "--type" in args:
+        idx = args.index("--type")
+        if idx + 1 < len(args):
+            type_key = args[idx + 1]
+            args.pop(idx + 1)
+            args.pop(idx)
 
-    remaining, tag, project, _claw = parse_metadata_args(args)
+    remaining, tag, project = parse_metadata_args(args)
 
     if not remaining:
         output_error("ARGS", "缺少待办内容")
         return
-
-    meta_suffix = build_metadata_suffix(tag, project)
 
     # 每个参数创建一个待办块
     blocks = []
@@ -51,17 +56,18 @@ def main():
         text = item.strip()
         if not text:
             continue
-        if meta_suffix:
-            text += f"  {meta_suffix}"
         blocks.append(make_todo_block(text, checked=checked))
 
     if not blocks:
         output_error("ARGS", "缺少待办内容")
         return
 
-    append_blocks(blocks)
+    if checked:
+        type_key = "done"
+        
+    append_im_blocks(blocks, type_key=type_key, tag=tag, project=project)
 
-    status = "已完成" if checked else "待办"
+    status = "已完成" if checked else "待办/任务"
     output_ok(f"已添加 {len(blocks)} 条{status}")
 
 
