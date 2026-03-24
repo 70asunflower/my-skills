@@ -506,7 +506,7 @@ def build_header_block(type_key: str, tag: str = None, project: str = None) -> d
     整体文字颜色由 type_key 决定。
     """
     config = TYPE_CONFIG.get(type_key, {"emoji": "💬", "color": "gray"})
-    time_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+    time_str = datetime.now().strftime("[%Y-%m-%d %H:%M]")
     emoji = config["emoji"]
     color = "gray"  # 统一使用灰色
     
