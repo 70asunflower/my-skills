@@ -505,10 +505,10 @@ def build_header_block(type_key: str, tag: str = None, project: str = None) -> d
     格式示例：10:30 📅  #标签 💼【项目】
     整体文字颜色由 type_key 决定。
     """
-    config = TYPE_CONFIG.get(type_key, {"emoji": "💬", "color": "default"})
-    time_str = datetime.now().strftime("%H:%M")
+    config = TYPE_CONFIG.get(type_key, {"emoji": "💬", "color": "gray"})
+    time_str = datetime.now().strftime("%Y-%m-%d %H:%M")
     emoji = config["emoji"]
-    color = config["color"]
+    color = "gray"  # 统一使用灰色
     
     parts = [f"{time_str} {emoji}"]
     if tag:
