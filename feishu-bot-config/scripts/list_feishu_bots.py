@@ -13,9 +13,13 @@ def load_openclaw_config():
     if not config_path.exists():
         print(f"Error: Config file not found at {config_path}", file=sys.stderr)
         sys.exit(1)
-    
+
     with open(config_path, 'r') as f:
-        return json.load(f)
+        try:
+            return json.load(f)
+        except json.JSONDecodeError as e:
+            print(f"Error: Failed to parse config: {e}", file=sys.stderr)
+            sys.exit(1)
 
 def list_bots(config):
     """List all configured Feishu bots."""

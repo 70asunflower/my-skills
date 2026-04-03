@@ -1,0 +1,8 @@
+{
+  "ownerId": "kn70pywhg0fyz996kpa8xj89s57yhv26",
+  "slug": "feishu-bot-config",
+  "version": "1.0.0",
+  "publishedAt": 1743638400000,
+  "name": "feishu-bot-config",
+  "description": "飞书机器人配置管理工具，自动化添加、管理和排查 OpenClaw 飞书机器人集成"
+}

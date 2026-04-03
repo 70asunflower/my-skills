@@ -94,7 +94,7 @@ def add_binding(config, app_id, agent_name):
 def main():
     if len(sys.argv) < 4:
         print("Usage: add_feishu_bot.py <agent_name> <app_id> <app_secret>", file=sys.stderr)
-        print("Example: add_feishu_bot.py ceo_orchestrator cli_a94504d586b85bc2 qINKS7Lezl3Kkp7fct2SkeeU3ACTnfa4", file=sys.stderr)
+        print("Example: add_feishu_bot.py my_agent <app_id> <app_secret>", file=sys.stderr)
         sys.exit(1)
     
     agent_name = sys.argv[1]
