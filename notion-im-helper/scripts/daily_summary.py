@@ -1,120 +1,139 @@
-# -*- coding: utf-8 -*-
-"""
-每日汇总
-读取目标页面今天的所有内容块，整理成格式化的日报。
-
-用法：
-    python daily_summary.py
-"""
-
-import sys
+"""Daily summary, weekly report, and random quote extraction."""
 import os
-import json
-from datetime import datetime, timezone
+import sys
+import random
+from datetime import datetime, timedelta
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from notion_helper import (
-    check_required_config,
-    list_all_blocks,
-    get_today_str,
-    output_ok,
-    output_error,
-    log_debug,
-)
+sys.path.insert(0, os.path.dirname(__file__))
+from notion_client import get_children, PAGE_ID
 
 
-def extract_block_text(block: dict) -> str:
-    """从内容块中提取纯文本"""
+def extract_text(block):
+    """Extract text content from a block."""
     block_type = block.get("type", "")
-    type_data = block.get(block_type, {})
-
-    # 大部分块类型都有 rich_text
-    rich_text = type_data.get("rich_text", [])
-    if rich_text:
-        return "".join(item.get("plain_text", "") for item in rich_text)
-
-    return ""
+    content = block.get(block_type, {})
+    rich = content.get("rich_text", [])
+    text = ""
+    for item in rich:
+        text += item.get("text", {}).get("content", "")
+    return text.strip()
 
 
-def format_block_for_summary(block: dict) -> dict:
-    """将内容块格式化为日报条目"""
-    block_type = block.get("type", "")
-    text = extract_block_text(block)
-    created_time = block.get("created_time", "")
+def get_today_blocks():
+    """Get all blocks from the page (recent ones, last N blocks)."""
+    result = get_children(page_size=100)
+    if not result or "results" not in result:
+        return []
+    return result["results"]
 
-    # 解析创建时间
-    time_str = ""
-    if created_time:
-        try:
-            dt = datetime.fromisoformat(created_time.replace("Z", "+00:00"))
-            local_dt = dt.astimezone()
-            time_str = local_dt.strftime("%H:%M")
-        except (ValueError, TypeError):
-            pass
 
-    type_labels = {
-        "paragraph": "📝",
-        "to_do": "✅" if block.get("to_do", {}).get("checked") else "☐",
-        "heading_1": "📌 H1",
-        "heading_2": "📌 H2",
-        "heading_3": "📌 H3",
-        "quote": "💬",
-        "bulleted_list_item": "•",
-        "numbered_list_item": "#",
-        "toggle": "📂",
-        "divider": "---",
-    }
+def generate_daily_summary():
+    """Generate a daily summary from recent blocks."""
+    blocks = get_today_blocks()
+    if not blocks:
+        return "📊 今日简报\n\n今天还没有记录呢，去记点什么吧~"
 
-    label = type_labels.get(block_type, "📝")
+    today = datetime.now().strftime("%Y-%m-%d")
+    lines = [f"📊 今日简报（{today}）\n"]
 
-    return {
-        "type": block_type,
-        "label": label,
-        "text": text,
-        "time": time_str,
-    }
+    type_counts = {}
+    items = []
+
+    for block in blocks:
+        block_type = block.get("type", "")
+        text = extract_text(block)
+        if not text:
+            continue
+
+        # Determine type from content
+        if "📅" in text:
+            t = "日记"
+        elif "💡" in text or "想法" in text:
+            t = "想法"
+        elif "📝" in text:
+            t = "笔记"
+        elif "📖" in text or "摘抄" in text:
+            t = "摘抄"
+        elif "❓" in text:
+            t = "问题"
+        elif block_type == "to_do":
+            checked = block.get("to_do", {}).get("checked", False)
+            t = "已完成" if checked else "待办"
+        elif block_type == "bookmark":
+            t = "链接"
+        elif block_type in ("divider", "heading_1", "heading_2", "heading_3"):
+            continue
+        elif block_type in ("bulleted_list_item", "numbered_list_item"):
+            continue
+        else:
+            t = "其他"
+
+        type_counts[t] = type_counts.get(t, 0) + 1
+        if text and len(text) < 100:
+            items.append((t, text.replace("\n", " ")))
+
+    lines.append(f"共 {sum(type_counts.values())} 条记录：")
+    for t, c in type_counts.items():
+        lines.append(f"  {t}: {c} 条")
+
+    lines.append(f"\n---\n最新记录：")
+    for t, text in items[-5:]:
+        lines.append(f"  [{t}] {text[:50]}")
+
+    return "\n".join(lines)
+
+
+def generate_random_quote(count=1):
+    """Randomly select historical entries."""
+    blocks = get_today_blocks()
+    if not blocks:
+        return "📖 还没有摘抄呢，先去记点什么吧~"
+
+    # Filter out structural blocks
+    candidates = []
+    for block in blocks:
+        text = extract_text(block)
+        if text and ("📖" in text or "📝" in text or "💡" in text or "📅" in text):
+            clean = text.replace("\n", " ").strip()
+            if clean:
+                candidates.append(clean)
+
+    if not candidates:
+        return "📖 没有找到合适的摘抄内容~"
+
+    selected = random.sample(candidates, min(count, len(candidates)))
+    lines = ["📖 随机回忆~"]
+    for i, text in enumerate(selected, 1):
+        lines.append(f"{i}. {text[:80]}")
+    return "\n".join(lines)
+
+
+def generate_weekly_report():
+    """Simple weekly summary."""
+    blocks = get_today_blocks()
+    total = len([b for b in blocks if extract_text(b)])
+    return f"📊 本周简报\n\n本周尚无自动周统计能力，累计记录约 {total} 条。\n建议：保持每日 3+ 条记录！"
 
 
 def main():
-    if not check_required_config():
-        return
+    command = sys.argv[1] if len(sys.argv) > 1 else "daily"
 
-    today = get_today_str()
-    log_debug(f"获取今日（{today}）记录")
+    if command in ("daily", "日报"):
+        result = generate_daily_summary()
+    elif command in ("quote", "random", "随机摘抄", "摘抄"):
+        count = 1
+        if len(sys.argv) > 2:
+            try:
+                count = int(sys.argv[2])
+            except ValueError:
+                pass
+        result = generate_random_quote(count)
+    elif command in ("weekly", "周报"):
+        result = generate_weekly_report()
+    else:
+        result = generate_daily_summary()
 
-    all_blocks = list_all_blocks()
-
-    # 过滤今天的内容块
-    today_blocks = []
-    for block in all_blocks:
-        created_time = block.get("created_time", "")
-        if not created_time:
-            continue
-        try:
-            dt = datetime.fromisoformat(created_time.replace("Z", "+00:00"))
-            local_dt = dt.astimezone()
-            if local_dt.strftime("%Y-%m-%d") == today:
-                # 跳过分割线
-                if block.get("type") == "divider":
-                    continue
-                formatted = format_block_for_summary(block)
-                if formatted["text"]:  # 只保留有内容的块
-                    today_blocks.append(formatted)
-        except (ValueError, TypeError):
-            continue
-
-    if not today_blocks:
-        output_ok(f"今天（{today}）暂无记录")
-        return
-
-    # 输出 JSON
-    result = {
-        "date": today,
-        "count": len(today_blocks),
-        "items": today_blocks,
-    }
-    print(f"OK|{json.dumps(result, ensure_ascii=False)}", flush=True)
+    print(f"OK|{result}")
 
 
 if __name__ == "__main__":
