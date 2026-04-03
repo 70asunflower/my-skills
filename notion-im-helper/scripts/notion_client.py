@@ -71,7 +71,7 @@ def append_blocks(children, silent=False):
         print(f"OK|已记录到 Notion，共 {block_count} 个 blocks")
 
 
-def get_children(page_id=None, start_cursor=None, page_size=100):
+def get_children(page_id=None, start_cursor=None, page_size=100, silent=False):
     """Read page children blocks."""
     pid = page_id or PAGE_ID
     params = f"page_size={page_size}"
@@ -79,7 +79,8 @@ def get_children(page_id=None, start_cursor=None, page_size=100):
         params += f"&start_cursor={start_cursor}"
     result = api_request("GET", f"blocks/{pid}/children?{params}")
     if result.get("error"):
-        _emit_error(result)
+        if not silent:
+            _emit_error(result)
         return None
     return result
 

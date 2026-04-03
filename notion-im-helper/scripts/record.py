@@ -160,7 +160,7 @@ def extract_date_from_block(block):
 
 def check_need_day_separator():
     """Check if the last block on the page is from a different day."""
-    data = get_children(page_size=5)
+    data = get_children(page_size=5, silent=True)
     if not data or "results" not in data:
         return False
 
