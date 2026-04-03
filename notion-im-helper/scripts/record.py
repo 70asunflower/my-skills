@@ -1,9 +1,9 @@
 """Unified record entry - dispatch by type to create Notion blocks."""
 import os
+import re
 import sys
 import json
 import argparse
-import urllib.request
 from datetime import datetime, timezone, timedelta
 
 sys.stdout.reconfigure(encoding='utf-8')
@@ -110,9 +110,6 @@ TYPE_CONFIG = {
     "quote": {"emoji": "📖", "color": "green", "label": "摘抄"},
     "link": {"emoji": "🔗", "color": "default", "label": "链接"},
 }
-
-
-import re
 
 
 def parse_metadata(text):
@@ -246,28 +243,30 @@ def cmd_record(args):
         print("OK|没有内容可记录")
         return
 
-    append_blocks(blocks)
+    append_blocks(blocks, silent=True)
     type_label = cfg["label"]
     if args.type in ("todo", "done"):
         count = len([b for b in blocks if b.get("type") == "to_do"])
-        print(f"OK|已记录到 Notion 包含 {count} 条{type_label}")
+        print(f"OK|已记录到 Notion，共 {count} 条{type_label}")
+    else:
+        print("OK|已记录到 Notion ✅")
 
 
 def cmd_heading(args):
     blocks = [build_heading(args.level, " ".join(args.content))]
-    append_blocks(blocks)
+    append_blocks(blocks, silent=True)
     print("OK|已记录到 Notion ✅")
 
 
 def cmd_divider(_args):
-    append_blocks([build_divider()])
+    append_blocks([build_divider()], silent=True)
     print("OK|已记录到 Notion ✅")
 
 
 def cmd_list(args):
     builder = build_bullet if args.kind == "bullet" else build_numbered
     blocks = [builder(text) for text in args.content]
-    append_blocks(blocks)
+    append_blocks(blocks, silent=True)
     print("OK|已记录到 Notion ✅")
 
 
@@ -282,7 +281,7 @@ def cmd_toggle(args):
             print("ERROR| 无效的 toggle 数据")
             return
     blocks = [build_toggle(data["title"], data.get("children"))]
-    append_blocks(blocks)
+    append_blocks(blocks, silent=True)
     print("OK|已记录到 Notion ✅")
 
 

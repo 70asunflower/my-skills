@@ -10,15 +10,17 @@ sys.stdout.reconfigure(encoding='utf-8')
 API_KEY = os.environ.get("NOTION_API_KEY", "")
 BASE_URL = "https://api.notion.com/v1"
 
-HEADERS = {
-    "Authorization": f"Bearer {API_KEY}",
-    "Content-Type": "application/json",
-    "Notion-Version": "2022-06-28",
-}
+
+def get_headers():
+    return {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json",
+        "Notion-Version": "2022-06-28",
+    }
 
 
 def search(query, page_size=10):
-    """Search using Notion Search API."""
+    """Search using Notion Search API with retry on rate limit."""
     body = {
         "query": query,
         "page_size": page_size,
@@ -27,26 +29,35 @@ def search(query, page_size=10):
             "timestamp": "last_edited_time",
         },
     }
-    data = json.dumps(body).encode()
-    req = urllib.request.Request(
-        f"{BASE_URL}/search",
-        data=data,
-        headers=HEADERS,
-        method="POST",
-    )
-    try:
-        resp = urllib.request.urlopen(req)
-        return json.loads(resp.read())
-    except urllib.error.HTTPError as e:
-        error_body = e.read().decode()
+    for attempt in range(3):
+        data = json.dumps(body).encode()
+        req = urllib.request.Request(
+            f"{BASE_URL}/search",
+            data=data,
+            headers=get_headers(),
+            method="POST",
+        )
         try:
-            err_data = json.loads(error_body)
-            message = err_data.get("message", str(e))
-        except Exception:
-            message = str(e)
-        return {"error": True, "code": e.code, "message": message}
-    except Exception as e:
-        return {"error": True, "message": str(e)}
+            resp = urllib.request.urlopen(req)
+            return json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            if e.code == 429:
+                time.sleep(1.5 * (attempt + 1))
+                continue
+            error_body = e.read().decode()
+            try:
+                err_data = json.loads(error_body)
+                message = err_data.get("message", str(e))
+            except Exception:
+                message = str(e)
+            return {"error": True, "code": e.code, "message": message}
+        except Exception as e:
+            if attempt < 2:
+                time.sleep(1)
+                continue
+            return {"error": True, "message": str(e)}
+
+    return {"error": True, "message": "Rate limited after retries"}
 
 
 def extract_snippet(result):

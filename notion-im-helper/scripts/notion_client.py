@@ -57,7 +57,7 @@ def api_request(method, path, body=None):
     return {"error": True, "message": "Rate limited after retries"}
 
 
-def append_blocks(children):
+def append_blocks(children, silent=False):
     """Append a list of blocks to the page."""
     if not children:
         print("OK|没有内容可追加")
@@ -67,7 +67,8 @@ def append_blocks(children):
         _emit_error(result)
         return
     block_count = len(result.get("results", children))
-    print(f"OK|已记录到 Notion，共 {block_count} 个 blocks")
+    if not silent:
+        print(f"OK|已记录到 Notion，共 {block_count} 个 blocks")
 
 
 def get_children(page_id=None, start_cursor=None, page_size=100):
