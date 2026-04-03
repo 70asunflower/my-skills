@@ -102,7 +102,7 @@ def build_toggle(text, children=None):
 
 TYPE_CONFIG = {
     "idea": {"emoji": "💡", "color": "default", "label": "想法"},
-    "diary": {"emoji": "📅", "color": "blue", "label": "日记"},
+    "diary": {"emoji": "📒", "color": "blue", "label": "日记"},
     "todo": {"emoji": "☐", "color": "default", "label": "待办"},
     "done": {"emoji": "✔️", "color": "default", "label": "已完成"},
     "note": {"emoji": "📝", "color": "yellow", "label": "笔记"},
