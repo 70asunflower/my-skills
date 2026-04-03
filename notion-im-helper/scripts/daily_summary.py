@@ -4,6 +4,7 @@ import sys
 import random
 from datetime import datetime, timedelta
 
+sys.stdout.reconfigure(encoding='utf-8')
 sys.path.insert(0, os.path.dirname(__file__))
 from notion_client import get_children, PAGE_ID
 
@@ -30,7 +31,7 @@ def get_today_blocks():
 def generate_daily_summary():
     """Generate a daily summary from recent blocks."""
     blocks = get_today_blocks()
-    if not blocks:
+    if blocks is None or not blocks:
         return "📊 今日简报\n\n今天还没有记录呢，去记点什么吧~"
 
     today = datetime.now().strftime("%Y-%m-%d")
@@ -111,6 +112,8 @@ def generate_random_quote(count=1):
 def generate_weekly_report():
     """Simple weekly summary."""
     blocks = get_today_blocks()
+    if blocks is None:
+        return "📊 本周简报\n\n暂时无法获取记录，请稍后重试。"
     total = len([b for b in blocks if extract_text(b)])
     return f"📊 本周简报\n\n本周尚无自动周统计能力，累计记录约 {total} 条。\n建议：保持每日 3+ 条记录！"
 

@@ -329,7 +329,10 @@ def main():
     if not args.command:
         parser.print_help()
         return
-    args.func(args)
+    try:
+        args.func(args)
+    except Exception as e:
+        print(f"ERROR| 操作失败: {e}")
 
 
 if __name__ == "__main__":

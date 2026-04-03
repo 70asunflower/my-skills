@@ -5,6 +5,8 @@ import json
 import urllib.request
 import urllib.error
 
+sys.stdout.reconfigure(encoding='utf-8')
+
 API_KEY = os.environ.get("NOTION_API_KEY", "")
 PAGE_ID = os.environ.get("NOTION_PARENT_PAGE_ID", "")
 BASE_URL = "https://api.notion.com/v1"
@@ -109,7 +111,7 @@ def check_config():
         msg = result.get("message", "")
         if code == 401 or "Unauthorized" in msg:
             return {"ok": False, "code": "AUTH", "message": "API Key 无效或页面未授权"}
-        if code == 404 or "Not Found" not in msg:
+        if code == 404 or "Not Found" in msg:
             return {"ok": False, "code": "AUTH", "message": "页面不存在或 Integration 未授权"}
         return {"ok": False, "code": "UNKNOWN", "message": msg}
     return {"ok": True, "message": ""}
