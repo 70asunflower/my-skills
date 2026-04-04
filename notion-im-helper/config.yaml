@@ -40,7 +40,6 @@ metadata:
         - undo
         - 搜索
         - search
-        - notion
         - riji
       prefixPatterns:
         - "^diary:"
@@ -72,7 +71,6 @@ metadata:
         - "^搜:"
         - "^search:"
         - "^今日"
-        - "^today"
       shortcutKeys:
         d: diary
         n: note
