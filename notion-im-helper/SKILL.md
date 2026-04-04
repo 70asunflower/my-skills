@@ -40,9 +40,9 @@ python scripts/summary.py {monthly|quote}
 - `日记:` / `今天:` / `riji:` / `d` → diary
 - `笔记:` / `学习:` / `note:` / `n` → note
 - `待办:` / `todo:` / `t` → todo
-- `done:` / `完成:` / `√` → done
+- `done:` / `完成:` / `√ ` → done
 - `想法:` / `灵感:` / `idea:` / `flash:` / `闪念:` / `i` → idea
-- `问题:` / `疑问:` / `q:` / `q` → question
+- `问题:` / `疑问:` / `q:` → question
 - `摘抄:` / `quote:` / `qu:` / `z` → quote
 - `链接:` / `link:` / `url:` / `l` → link
 
@@ -53,20 +53,35 @@ python scripts/summary.py {monthly|quote}
 - `> text` → quote block
 - `---` → divider
 - `- text` → bulleted list
-- `1. text` → numbered list
+- `1. text` / `2. text` etc → numbered list
+- `toggle: title` + subsequent `-` / `--` / `---` lines → toggle block
 
 **Commands:**
-- `月报` / `monthly` → LLM-powered monthly summary (auto-records to Notion)
+- `月报` / `monthly` → extract current month records for summary
 - `摘抄` / `随机摘抄` → random historical entry
 - `搜: xxx` / `search: xxx` → search records by keyword
-- `撤回` / `undo` → delete last block
+- `撤回` / `undo` → delete last batch of blocks (within 5 min window)
 - `配置检查` / `check config` → verify config
 
 **Smart detection** (no prefix, AI infers):
 - Pure URL → link
 - Starts with YYYY-MM-DD → diary
-- Contains `[ ]` → todo
+- Contains `[ ]` or `【 】` → todo
 - Default → idea
+
+## Metadata
+
+Scan the LAST line for metadata:
+- `#关键词` → tag
+- `/p:项目名` → project
+- Remove metadata from content before passing to script
+
+## Batch & Undo
+
+- Multi-line messages: each format line (heading/quote/divider/list) becomes a separate block, sent in a single API call
+- Undo within 5 minutes: deletes all blocks from the last batch
+- Undo after 5 minutes: deletes only the last single block
+- Day separator: a divider is auto-inserted when the last record is from a different day
 
 ## Output Protocol
 

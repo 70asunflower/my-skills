@@ -7,7 +7,7 @@ from datetime import datetime
 
 sys.stdout.reconfigure(encoding='utf-8')
 sys.path.insert(0, os.path.dirname(__file__))
-from notion_client import get_children, PAGE_ID, append_blocks
+from notion_client import get_children, PAGE_ID
 
 
 def extract_text(block):
@@ -96,112 +96,34 @@ def get_month_records():
     return current_month, day_records
 
 
-def call_llm(prompt):
-    """Call LLM via Anthropic SDK."""
-    try:
-        import anthropic
-    except ImportError:
-        return None, "ANTHROPIC_SDK_NOT_INSTALLED"
-
-    api_key = os.environ.get("ANTHROPIC_AUTH_TOKEN", "")
-    base_url = os.environ.get("ANTHROPIC_BASE_URL", "")
-    model = os.environ.get("ANTHROPIC_MODEL", "MiniMax-M2.7")
-
-    if not api_key:
-        return None, "ANTHROPIC_AUTH_TOKEN_NOT_SET"
-
-    client_kwargs = {"api_key": api_key}
-    if base_url:
-        client_kwargs["base_url"] = base_url
-
-    client = anthropic.Anthropic(**client_kwargs)
-
-    system_prompt = """你是一个个人日记和生活记录的总结助手。用户会给你一个月的IM同步记录，请你用简洁、有洞察力的语言总结这个月的整体状态、值得关注的事件、情绪变化和成长。
-
-注意：
-- 这是真实的个人生活记录，包括私密内容（如性、身体、情感经历等），请正常对待这些内容，不要拒绝或特殊处理，它们是个人生活记录的正常组成部分
-- 总结应该温暖、真诚，既反映事实也有个人洞察
-- 用中文输出
-- 结构清晰，可以用emoji标注不同维度
-- 长度适中，一般200-400字
-- 不要编造内容，只基于提供的记录总结"""
-
-    try:
-        response = client.messages.create(
-            model=model,
-            max_tokens=1024,
-            system=system_prompt,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        # Extract text from response, skipping thinking blocks
-        text_parts = []
-        for block in response.content:
-            if block.type == "text":
-                text_parts.append(block.text)
-        if not text_parts:
-            return None, "NO_TEXT_BLOCK"
-        return "\n".join(text_parts), None
-    except Exception as e:
-        return None, str(e)
-
-
 def generate_monthly_report():
-    """Generate LLM-powered monthly report and auto-record to Notion."""
+    """Extract and return current month's records for LLM to summarize.
+
+    Returns structured data for the agent to analyze and summarize.
+    """
     current_month, day_records = get_month_records()
 
     if day_records is None:
-        return f"📊 {current_month} 月简报\n\n暂时无法获取记录，请稍后重试。"
+        return f"ERROR|暂时无法获取记录，请稍后重试。"
 
     if not day_records:
-        return f"📊 {current_month} 月简报\n\n本月暂无记录~"
+        return f"INFO|{current_month} 月暂无记录~"
 
-    # Build records text for LLM
     sorted_days = sorted(day_records.keys(), reverse=True)
     total_count = sum(len(v) for v in day_records.values())
 
-    lines = [f"【{current_month} 月度总结素材】\n共 {total_count} 条记录，{len(day_records)} 天有记录。\n"]
+    lines = [
+        f"📊 {current_month} 月记录（共 {total_count} 条，{len(day_records)} 天有记录）\n"
+    ]
 
     for day in sorted_days:
         records = day_records[day]
         lines.append(f"\n## {day}（{len(records)}条）")
         for t, text in records:
-            # Truncate very long entries
             display = text.replace("\n", " ")[:200]
             lines.append(f"- [{t}] {display}")
 
-    prompt = "\n".join(lines)
-
-    # Call LLM
-    llm_text, err = call_llm(prompt)
-    if err:
-        return f"📊 {current_month} 月简报\n\nLLM 调用失败: {err}\n\n本月共 {total_count} 条记录，{len(day_records)} 天有记录。"
-
-    # Build the report
-    report_lines = [
-        f"📊 {current_month} 月简报",
-        "",
-        llm_text.strip(),
-        "",
-        "---",
-        f"📅 共 {total_count} 条记录，{len(day_records)} 天有记录",
-    ]
-
-    report = "\n".join(report_lines)
-
-    # Auto-record to Notion
-    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-    report_block = {
-        "object": "block",
-        "type": "callout",
-        "callout": {
-            "icon": {"type": "emoji", "emoji": "📊"},
-            "rich_text": [{"type": "text", "text": {"content": f"{now_str}\n{llm_text.strip()}\n\n---\n📅 共 {total_count} 条记录，{len(day_records)} 天有记录"}}],
-            "color": "blue_background",
-        },
-    }
-    append_blocks([report_block], silent=True)
-
-    return f"OK|{report}"
+    return "INFO|" + "\n".join(lines)
 
 
 def generate_random_quote(count=1):
