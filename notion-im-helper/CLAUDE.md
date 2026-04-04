@@ -33,8 +33,7 @@ Check the user message against these patterns:
 - `l ` at start → `link`
 
 ### Command Patterns (match entire line)
-- `日报` / `daily` / `今日` / `today` → daily summary
-- `周报` / `weekly` → weekly report
+- `月报` / `monthly` → LLM-powered monthly summary (auto-records to Notion)
 - `摘抄` / `随机摘抄` → random quote
 - `搜: xxx` / `search: xxx` → search (pass xxx as argument to scripts/search_notes.py)
 - `撤回` / `undo` → delete last block

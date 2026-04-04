@@ -34,16 +34,12 @@ metadata:
         - link
         - flash
         - 闪念
-        - 日报
-        - 周报
-        - daily
-        - weekly
+        - 月报
+        - monthly
         - 撤回
         - undo
         - 搜索
         - search
-        - 今日
-        - today
         - notion
         - riji
       prefixPatterns:
@@ -69,10 +65,8 @@ metadata:
         - "^闪念:"
         - "^done:"
         - "^完成:"
-        - "^日报"
-        - "^周报"
-        - "^daily"
-        - "^weekly"
+        - "^月报"
+        - "^monthly"
         - "^撤回"
         - "^undo"
         - "^搜:"

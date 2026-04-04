@@ -31,7 +31,7 @@ python scripts/record.py list --kind {bullet|number} "{items}"
 python scripts/record.py toggle "{json}"
 python scripts/record.py undo
 python scripts/check_config.py
-python scripts/daily_summary.py {daily|weekly|quote}
+python scripts/summary.py {monthly|quote}
 ```
 
 ## Trigger Rules
@@ -56,8 +56,7 @@ python scripts/daily_summary.py {daily|weekly|quote}
 - `1. text` → numbered list
 
 **Commands:**
-- `日报` / `daily` / `今日` / `today` → show today's records
-- `周报` / `weekly` → weekly summary
+- `月报` / `monthly` → LLM-powered monthly summary (auto-records to Notion)
 - `摘抄` / `随机摘抄` → random historical entry
 - `搜: xxx` / `search: xxx` → search records by keyword
 - `撤回` / `undo` → delete last block

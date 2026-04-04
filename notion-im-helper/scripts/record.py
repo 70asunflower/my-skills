@@ -229,15 +229,56 @@ def build_blocks_for_type(record_type, content):
 
 # ---- Main dispatch ----
 
+def parse_format_line(line):
+    """Check if a line is a format pattern, return block or None."""
+    if line.startswith("* ") and not line.startswith("** ") and not line.startswith("*** "):
+        return build_heading(1, line[2:])
+    if line.startswith("** ") and not line.startswith("*** "):
+        return build_heading(2, line[3:])
+    if line.startswith("*** "):
+        return build_heading(3, line[4:])
+    if line.startswith("> "):
+        return build_quote_block(line[2:])
+    if line.strip() == "---":
+        return build_divider()
+    if line.startswith("- "):
+        return build_bullet(line[2:])
+    # Numbered list: "1. text" or "1) text"
+    stripped = line.lstrip()
+    if stripped and stripped[0].isdigit():
+        m = re.match(r"^(\d+[.)])\s+(.*)", stripped)
+        if m:
+            return build_numbered(m.group(2))
+    return None
+
+
 def cmd_record(args):
     cfg = TYPE_CONFIG.get(args.type, TYPE_CONFIG["idea"])
+    full_content = " ".join(args.content)
     blocks = []
 
     # Check if we need a day separator
     if check_need_day_separator():
         blocks.append(build_divider())
 
-    blocks.extend(build_blocks_for_type(args.type, " ".join(args.content)))
+    # Multi-line: check each line for format patterns first
+    lines = full_content.split("\n")
+    content_lines = []
+    for line in lines:
+        fmt_block = parse_format_line(line)
+        if fmt_block is not None:
+            # Flush any accumulated content lines as a callout first
+            if content_lines:
+                content_text = "\n".join(content_lines)
+                blocks.extend(build_blocks_for_type(args.type, content_text))
+                content_lines = []
+            blocks.append(fmt_block)
+        else:
+            content_lines.append(line)
+
+    # Remaining content lines
+    if content_lines:
+        blocks.extend(build_blocks_for_type(args.type, "\n".join(content_lines)))
 
     if not blocks:
         print("OK|没有内容可记录")
@@ -249,7 +290,7 @@ def cmd_record(args):
         count = len([b for b in blocks if b.get("type") == "to_do"])
         print(f"OK|已记录到 Notion，共 {count} 条{type_label}")
     else:
-        print("OK|已记录到 Notion ✅")
+        print(f"OK|已记录到 Notion，共 {len(blocks)} 条 ✅")
 
 
 def cmd_heading(args):
