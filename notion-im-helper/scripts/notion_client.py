@@ -206,6 +206,51 @@ def check_config():
     return {"ok": True, "message": ""}
 
 
+def upload_file(file_path):
+    """Upload a local file to Notion via File Upload API.
+
+    Uses the notion-upload library to upload a file, then returns the file_id
+    which can be used with image/file blocks using type "file_upload".
+
+    Includes a small delay after upload to avoid rate limits when uploading
+    multiple images in quick succession.
+
+    Args:
+        file_path: Absolute path to the local file.
+
+    Returns:
+        The Notion file_upload ID string on success, None on failure.
+    """
+    try:
+        from notion_upload import notion_upload as nu
+    except ImportError:
+        print("ERROR| notion-upload 库未安装，请运行: pip install notion-upload")
+        return None
+
+    if not API_KEY:
+        print("ERROR|AUTH")
+        return None
+
+    file_name = os.path.basename(file_path)
+    try:
+        uploader = nu(file_path, file_name, API_KEY, enforce_max_size=True)
+        file_id = uploader.upload()
+        if file_id:
+            # Small delay to avoid rate limit on rapid successive uploads
+            import time
+            time.sleep(0.5)
+            return file_id
+        else:
+            print("ERROR| 图片上传失败: 未返回 file_id")
+            return None
+    except FileNotFoundError:
+        print(f"ERROR| 文件不存在: {file_path}")
+        return None
+    except Exception as e:
+        print(f"ERROR| 图片上传失败: {e}")
+        return None
+
+
 def _emit_error(result):
     """Emit a friendly error message based on the error code."""
     msg = result.get("message", "")

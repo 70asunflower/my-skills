@@ -29,6 +29,7 @@ python scripts/record.py heading --level {1|2|3} "{text}"
 python scripts/record.py divider
 python scripts/record.py list --kind {bullet|number} "{items}"
 python scripts/record.py toggle "{json}"
+python scripts/record.py image [--caption "text"] "{file_path_or_url}"
 python scripts/record.py undo
 python scripts/check_config.py
 python scripts/summary.py {monthly|quote}
@@ -45,6 +46,7 @@ python scripts/summary.py {monthly|quote}
 - `问题:` / `疑问:` / `q:` → question
 - `摘抄:` / `quote:` / `qu:` / `z` → quote
 - `链接:` / `link:` / `url:` / `l` → link
+- `图片:` / `photo:` / `img:` / `p` → image
 
 **Formats:**
 - `* text` → H1 heading
@@ -93,3 +95,12 @@ Scripts emit standardized output prefixes:
 - `ERROR|NETWORK` → tell user to retry later
 
 Always run `check_config.py` first on first use. Never modify or delete existing Notion blocks.
+
+## Image Upload
+
+- Supports **local file paths** (e.g., `C:\Users\photos\img.jpg`) and **HTTP URLs** (e.g., `https://example.com/photo.png`)
+- Local files are uploaded to Notion servers via the File Upload API, then attached as image blocks
+- URL images are referenced directly as external image blocks
+- Optional `--caption` flag to add caption text to the image
+- Max file size: 5MB (Notion API limit)
+- Supported formats: jpg, jpeg, png, gif, webp, bmp, svg

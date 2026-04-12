@@ -1,8 +1,8 @@
 {
   "ownerId": "kn70pywhg0fyz996kpa8xj89s57yhv26",
   "slug": "notion-im-helper",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "publishedAt": 1743638400000,
   "name": "notion-im-helper",
-  "description": "通过 IM 向 Notion 同步内容，支持日记/笔记/待办/想法/问题/链接/摘抄，批量撤回，月报整理"
+  "description": "通过 IM 向 Notion 同步内容，支持日记/笔记/待办/想法/问题/链接/摘抄/图片，批量撤回，月报整理"
 }

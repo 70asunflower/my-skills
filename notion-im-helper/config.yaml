@@ -32,6 +32,9 @@ metadata:
         - quote
         - 链接
         - link
+        - 图片
+        - photo
+        - img
         - flash
         - 闪念
         - 月报
@@ -61,6 +64,9 @@ metadata:
         - "^quote:"
         - "^链接:"
         - "^link:"
+        - "^图片:"
+        - "^photo:"
+        - "^img:"
         - "^flash:"
         - "^闪念:"
         - "^done:"
@@ -80,4 +86,5 @@ metadata:
         q: question
         z: quote
         l: link
+        p: image
 ---

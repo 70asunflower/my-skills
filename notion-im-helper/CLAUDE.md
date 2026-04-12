@@ -21,6 +21,7 @@ Check the user message against these patterns:
 - `问题:` or `疑问:` or starts with `q:` → `question`
 - `摘抄:` or starts with `quote:` or starts with `qu:` → `quote`
 - starts with `链接:` or `link:` or `url:` → `link`
+- `图片:` or `photo:` or `img:` → `image`
 
 ### Shortcut Keys (single letter prefix followed by space)
 - `d ` at start → `diary`
@@ -31,6 +32,7 @@ Check the user message against these patterns:
 - `q ` at start → `question`
 - `z ` at start → `quote`
 - `l ` at start → `link`
+- `p ` at start → `image`
 
 ### Command Patterns (match entire line)
 - `月报` / `monthly` → extract current month records for agent to summarize
@@ -51,6 +53,7 @@ Check the user message against these patterns:
 
 ### Smart Detection (no prefix matched → AI infers)
 - If line is a pure URL (starts with http:// or https://) → link
+- If line is a local file path pointing to an image file (e.g., `C:\Users\...\photo.jpg`) → image
 - If line starts with YYYY-MM-DD or `今天` → diary
 - If line contains `[ ]` or `【 】` → todo
 - Otherwise → idea
