@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Superpowers 使用指南（下）</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #F5F5F0;
+    --bg-card: #F9F9F6;
+    --bg-table-head: #EBEBE8;
+    --text: #1a1a1a;
+    --text-muted: #666666;
+    --text-light: #999999;
+    --accent: #2563EB;
+    --accent-light: #3B82F6;
+    --tag-green: #DCFCE7;
+    --tag-green-text: #166534;
+    --tag-yellow: #FEF9C3;
+    --tag-yellow-text: #854D0E;
+    --tag-red: #FEE2E2;
+    --tag-red-text: #991B1B;
+    --border: #E0E0DC;
+    --divider: #CCCCCC;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    width: 1242px;
+    height: 1660px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .content {
+    flex: 1;
+    padding: 0 52px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .section {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section:last-child { border-bottom: none; }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--text);
+    border-bottom: 3px solid var(--text);
+    padding-bottom: 5px;
+  }
+
+  .section-num {
+    font-size: 12px;
+    color: var(--text-light);
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 3px;
+    margin-right: 5px;
+    margin-bottom: 2px;
+  }
+
+  .tag-green { background: var(--tag-green); color: var(--tag-green-text); }
+  .tag-yellow { background: var(--tag-yellow); color: var(--tag-yellow-text); }
+  .tag-red { background: var(--tag-red); color: var(--tag-red-text); }
+  .tag-blue { background: rgba(37,99,235,0.1); color: var(--accent); }
+
+  /* TDD */
+  .tdd-flow {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+  }
+
+  .tdd-step {
+    padding: 20px 20px;
+    border-right: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .tdd-step:last-child { border-right: none; }
+
+  .tdd-step .phase {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .tdd-step:nth-child(1) .phase { color: #DC2626; }
+  .tdd-step:nth-child(2) .phase { color: #16A34A; }
+  .tdd-step:nth-child(3) .phase { color: var(--accent); }
+
+  .tdd-step .phase-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  .tdd-step p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  /* PROMPTS */
+  .prompts-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .prompt-col-title {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+
+  .prompt-item {
+    background: var(--bg-card);
+    padding: 11px 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    font-weight: 300;
+    font-style: italic;
+    border-left: 4px solid var(--accent);
+  }
+
+  /* QA */
+  .qa-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .qa-item {
+    background: var(--bg-card);
+    padding: 14px 18px;
+    border-left: 4px solid var(--accent);
+  }
+
+  .qa-q {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 5px;
+  }
+
+  .qa-a {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  /* BEST PRACTICES */
+  .bp-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .bp-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bp-item:last-child { border-bottom: none; }
+
+  .bp-check {
+    color: var(--accent);
+    font-size: 16px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .bp-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  .bp-text strong { color: var(--text); font-weight: 700; }
+
+  /* BOTTOM BANNER */
+  .banner-bottom {
+    background: #000;
+    color: #fff;
+    padding: 20px 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .banner-bottom .slogan {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .banner-bottom .slogan .kw { color: var(--accent-light); }
+
+  .banner-bottom .meta {
+    font-size: 12px;
+    color: #888;
+    text-align: right;
+    line-height: 1.7;
+  }
+
+  /* WARN BOX */
+  .warn-box {
+    background: var(--tag-yellow);
+    padding: 14px 18px;
+    border-left: 4px solid #EAB308;
+    margin-top: 12px;
+  }
+
+  .warn-box p {
+    font-size: 13px;
+    color: var(--tag-yellow-text);
+    line-height: 1.6;
+  }
+
+  .warn-box strong { font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="content">
+
+  <!-- TDD -->
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">TDD 强制流程</h2>
+      <span class="section-num">Test-Driven Development</span>
+    </div>
+    <div class="tdd-flow">
+      <div class="tdd-step">
+        <div class="phase">RED</div>
+        <div class="phase-name">失败测试</div>
+        <p>先写 failing 测试，验证测试正确失败，确认测试覆盖了预期行为</p>
+      </div>
+      <div class="tdd-step">
+        <div class="phase">GREEN</div>
+        <div class="phase-name">快速通过</div>
+        <p>实现让测试通过的代码，最小化改动，不追求完美只追求通过</p>
+      </div>
+      <div class="tdd-step">
+        <div class="phase">REFACTOR</div>
+        <div class="phase-name">重构优化</div>
+        <p>重构代码结构，删除任何为让测试通过而临时添加的代码，确保干净</p>
+      </div>
+    </div>
+    <div class="warn-box">
+      <p><strong>关键约束：</strong>代理在 REFACTOR 阶段会自动删除任何为让测试通过而临时添加的代码，确保代码库始终干净</p>
+    </div>
+  </div>
+
+  <!-- PROMPTS -->
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">触发短语</h2>
+      <span class="section-num">Trigger Phrases</span>
+    </div>
+    <div class="prompts-col">
+      <div class="prompt-col-title">可直接在会话中使用的触发语</div>
+      <div class="prompt-item">"我要实现 X 功能，需求是…先帮我做需求澄清并给出设计方案"</div>
+      <div class="prompt-item">"帮我把这个设计分成小任务并给出每个任务的文件变更和测试步骤"</div>
+      <div class="prompt-item">"现在开始执行计划，从第一个任务开始"</div>
+      <div class="prompt-item">"为刚写的功能生成失败测试，然后实现并修复直到测试通过"</div>
+      <div class="prompt-item">"请对当前分支进行代码审查并列出严重问题"</div>
+      <div class="prompt-item">"完成当前开发分支并给我可选的合并策略"</div>
+      <div class="prompt-item">"帮我做 brainstorm" / "触发 brainstorming"</div>
+    </div>
+  </div>
+
+  <!-- QA -->
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">常见问题</h2>
+      <span class="section-num">FAQ</span>
+    </div>
+    <div class="qa-grid">
+      <div class="qa-item">
+        <div class="qa-q">如何手动触发某个 skill？</div>
+        <div class="qa-a">直接在会话里说"帮我做 brainstorm"或"帮我写计划"，代理会在合适时机自动选择对应技能</div>
+      </div>
+      <div class="qa-item">
+        <div class="qa-q">插件如何更新？</div>
+        <div class="qa-a"><span class="tag tag-blue">/plugin update superpowers</span> <span class="tag tag-blue">gemini extensions update</span></div>
+      </div>
+      <div class="qa-item">
+        <div class="qa-q">子代理写出坏代码怎么办？</div>
+        <div class="qa-a">两阶段审查机制会拦截——规范合规检查 + 代码质量审查，严重问题阻止任务推进</div>
+      </div>
+      <div class="qa-item">
+        <div class="qa-q">测试基线不干净怎么办？</div>
+        <div class="qa-a">使用 using-git-worktrees 创建隔离工作树，确保每次开发都在干净测试基线上开始</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BEST PRACTICES -->
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">最佳实践</h2>
+      <span class="section-num">Best Practices</span>
+    </div>
+    <div class="bp-list">
+      <div class="bp-item">
+        <div class="bp-check">✓</div>
+        <div class="bp-text"><strong>设计优先</strong>：在任何自动化写代码之前，通过 brainstorming 获取清晰设计并确认，避免返工</div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-check">✓</div>
+        <div class="bp-text"><strong>小步提交</strong>：每个任务 2-5 分钟，频繁自测，利用 git worktrees 保持主分支干净</div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-check">✓</div>
+        <div class="bp-text"><strong>明确验收标准</strong>：每个任务必须有明确的测试/脚本/手动验证步骤，不能含糊</div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-check">✓</div>
+        <div class="bp-text"><strong>严重性分类</strong>：CRITICAL/HIGH 必须修复才能继续，MEDIUM 可延后，LOW 可选</div>
+      </div>
+      <div class="bp-item">
+        <div class="bp-check">✓</div>
+        <div class="bp-text"><strong>两阶段审查</strong>：子代理每次提交前先自测 spec 合规性，再做代码质量审查</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="banner-bottom">
+  <div class="slogan">Superpowers — 让 AI 编码代理<span class="kw">更系统、更可靠、更可审查</span></div>
+  <div class="meta">obra / superpowers<br>AI Coding Agent 可组合技能集</div>
+</div>
+
+</body>
+</html>

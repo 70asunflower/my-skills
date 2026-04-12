@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Superpowers 使用指南（上）</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #F5F5F0;
+    --bg-card: #F9F9F6;
+    --bg-table-head: #EBEBE8;
+    --text: #1a1a1a;
+    --text-muted: #666666;
+    --text-light: #999999;
+    --accent: #2563EB;
+    --accent-light: #3B82F6;
+    --tag-green: #DCFCE7;
+    --tag-green-text: #166534;
+    --border: #E0E0DC;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    width: 1242px;
+    height: 1660px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* BANNER */
+  .banner-top {
+    background: #000;
+    color: #fff;
+    padding: 24px 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .banner-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 3px;
+    margin-bottom: 10px;
+  }
+
+  .banner-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 60px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  .banner-title span { color: var(--accent-light); }
+
+  .banner-sub {
+    font-size: 14px;
+    color: #aaa;
+    margin-top: 8px;
+    font-weight: 300;
+  }
+
+  .banner-right {
+    display: flex;
+    gap: 20px;
+  }
+
+  .banner-stat {
+    text-align: center;
+  }
+
+  .banner-stat .num {
+    font-family: 'Oswald', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--accent-light);
+    line-height: 1;
+    display: block;
+  }
+
+  .banner-stat .lbl {
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: block;
+    margin-top: 3px;
+  }
+
+  /* CONTENT */
+  .content {
+    flex: 1;
+    padding: 0 52px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .section {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section:last-child { border-bottom: none; }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--text);
+    border-bottom: 3px solid var(--text);
+    padding-bottom: 5px;
+  }
+
+  .section-num {
+    font-size: 12px;
+    color: var(--text-light);
+  }
+
+  /* OVERVIEW 3 COL */
+  .ov3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .ov3-card {
+    background: var(--bg-card);
+    padding: 16px 18px;
+    border-left: 4px solid var(--text);
+  }
+
+  .ov3-card h4 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .ov3-card p {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  /* INSTALL TABLE */
+  .install-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .install-table th {
+    background: var(--bg-table-head);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    text-align: left;
+    padding: 9px 14px;
+    border-bottom: 2px solid #ccc;
+  }
+
+  .install-table td {
+    font-size: 14px;
+    color: var(--text);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+
+  .install-table tr:nth-child(even) td { background: rgba(0,0,0,0.015); }
+
+  .install-table code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    background: rgba(37,99,235,0.08);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+
+  .install-table .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    text-align: center;
+    width: 40px;
+  }
+
+  /* TAG */
+  .tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 3px;
+    margin-right: 4px;
+    margin-bottom: 2px;
+  }
+
+  .tag-blue { background: rgba(37,99,235,0.1); color: var(--accent); }
+  .tag-green { background: var(--tag-green); color: var(--tag-green-text); }
+
+  /* PLATFORMS */
+  .platforms {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  .platform {
+    background: var(--bg-card);
+    padding: 12px 14px;
+    text-align: center;
+  }
+
+  .platform-name {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .platform code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    background: rgba(37,99,235,0.07);
+    padding: 3px 7px;
+    border-radius: 3px;
+    display: block;
+    line-height: 1.8;
+    word-break: break-all;
+  }
+
+  /* WORKFLOW */
+  .workflow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .wf-step {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .wf-step:last-child { border-bottom: none; }
+
+  .wf-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    padding: 14px 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    border-right: 1px solid var(--border);
+  }
+
+  .wf-body {
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .wf-body h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .wf-body p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  .wf-tag {
+    display: inline-block;
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(37,99,235,0.08);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 500;
+    margin-top: 3px;
+  }
+
+  /* SKILLS GRID */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .skill-card {
+    background: var(--bg-card);
+    padding: 14px 18px;
+    border-left: 4px solid var(--text);
+  }
+
+  .skill-card h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 5px;
+  }
+
+  .skill-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+</style>
+</head>
+<body>
+
+<div class="banner-top">
+  <div>
+    <div class="banner-tag">Claude Code Plugin</div>
+    <h1 class="banner-title">Super<span>powers</span></h1>
+    <p class="banner-sub">AI 编码代理可组合技能集 · 从设计到代码审查的完整开发工作流</p>
+  </div>
+  <div class="banner-right">
+    <div class="banner-stat">
+      <span class="num">8+</span>
+      <span class="lbl">核心技能</span>
+    </div>
+    <div class="banner-stat">
+      <span class="num">TDD</span>
+      <span class="lbl">测试驱动</span>
+    </div>
+    <div class="banner-stat">
+      <span class="num">2</span>
+      <span class="lbl">阶段审查</span>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- 概述 -->
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">概述</h2>
+      <span class="section-num">Overview</span>
+    </div>
+    <div class="ov3">
+      <div class="ov3-card">
+        <h4>定位</h4>
+        <p>为 AI 编码代理打造的可组合技能集和工作流系统，覆盖设计、计划、分工、实现、测试、审查全流程</p>
+      </div>
+      <div class="ov3-card">
+        <h4>核心理念</h4>
+        <p>TDD 驱动、两阶段代码审查（规范合规 + 代码质量）、子代理分工执行、小步提交频繁自测</p>
+      </div>
+      <div class="ov3-card">
+        <h4>触发方式</h4>
+        <p>代理自动检测开发任务阶段并触发对应技能，也可通过自然语言显式请求特定技能</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 安装指南 -->
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">安装指南</h2>
+      <span class="section-num">Installation — Claude Code</span>
+    </div>
+    <table class="install-table">
+      <thead>
+        <tr>
+          <th style="width:40px; text-align:center;">#</th>
+          <th>步骤</th>
+          <th>命令</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="step-num">1</td>
+          <td>注册市场源</td>
+          <td><code>/plugin marketplace add obra/superpowers-marketplace</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">2</td>
+          <td>安装插件</td>
+          <td><code>/plugin install superpowers@superpowers-marketplace</code></td>
+        </tr>
+        <tr>
+          <td class="step-num">3</td>
+          <td>更新插件</td>
+          <td><code>/plugin update superpowers</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="background: var(--bg-card); padding: 14px 18px; border-left: 4px solid var(--accent); margin-top: 12px;">
+      <p style="font-size: 13px; color: var(--text-muted); line-height: 1.7; font-weight: 300;">
+        <strong style="color: var(--text); font-weight: 600;">验证安装：</strong>启动新会话，输入触发语如
+        <span class="tag tag-blue">"帮我规划这个功能"</span>
+        <span class="tag tag-blue">"让我们调试这个问题"</span>
+        代理应在合适时机自动使用对应技能
+      </p>
+    </div>
+    <div style="font-size: 12px; color: var(--text-muted); font-weight: 400; margin: 12px 0 8px; text-transform: uppercase; letter-spacing: 0.08em;">其他平台</div>
+    <div class="platforms">
+      <div class="platform">
+        <div class="platform-name">Claude 市场</div>
+        <code>/plugin install superpowers@claude-plugins-official</code>
+      </div>
+      <div class="platform">
+        <div class="platform-name">Cursor</div>
+        <code>/add-plugin superpowers</code>
+      </div>
+      <div class="platform">
+        <div class="platform-name">Gemini CLI</div>
+        <code>gemini extensions install https://github.com/obra/superpowers</code>
+      </div>
+      <div class="platform">
+        <div class="platform-name">Copilot CLI</div>
+        <code>copilot plugin marketplace add obra/superpowers-marketplace</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- 推荐流程 -->
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">推荐流程</h2>
+      <span class="section-num">Recommended Workflow — 8 Steps</span>
+    </div>
+    <div class="workflow">
+      <div class="wf-step">
+        <div class="wf-num">1</div>
+        <div class="wf-body">
+          <h4>Brainstorming — 需求澄清与设计</h4>
+          <p>用自然语言描述需求，代理通过提问澄清需求，分段展示设计文档并等待确认，避免返工</p>
+          <span class="wf-tag">帮我想想这个功能的设计</span>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">2</div>
+        <div class="wf-body">
+          <h4>审核设计 — 确认方案</h4>
+          <p>阅读代理输出的分段设计，逐段确认或请求修改，确认后再继续下一步</p>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">3</div>
+        <div class="wf-body">
+          <h4>Writing Plans — 任务拆分</h4>
+          <p>设计分解为 2-5 分钟的小任务，每个任务包含目标描述 / 文件路径与变更 / 完整代码片段 / 验证步骤</p>
+          <span class="wf-tag">把这个设计分成小任务</span>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">4</div>
+        <div class="wf-body">
+          <h4>Using Git Worktrees — 隔离工作区</h4>
+          <p>在新分支创建隔离工作树，运行安装和测试命令，确保干净的测试基线，保持主分支不受污染</p>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">5</div>
+        <div class="wf-body">
+          <h4>Subagent-Driven Development — 执行计划</h4>
+          <p>每个任务启动子代理 → 子代理按规范自测(spec compliance) → 代码质量审查 → 提交并运行测试</p>
+          <span class="wf-tag">开始执行计划</span>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">6</div>
+        <div class="wf-body">
+          <h4>Test-Driven Development — TDD</h4>
+          <p>始终遵循 RED → GREEN → REFACTOR 循环：写失败测试 → 实现代码 → 检查通过 → 重构并清理临时代码</p>
+          <span class="wf-tag">写失败测试再实现</span>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">7</div>
+        <div class="wf-body">
+          <h4>Code Review — 质量审查</h4>
+          <p>关键节点生成审查报告，按严重性分类（CRITICAL / HIGH 阻塞任务推进，MEDIUM / LOW 记录供后续处理）</p>
+          <span class="wf-tag">请审查当前分支</span>
+        </div>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">8</div>
+        <div class="wf-body">
+          <h4>Finishing Development Branch — 完成收尾</h4>
+          <p>所有任务完成且测试通过后，提供选项：直接合并 / 发起 PR / 保留分支 / 放弃并清理工作树</p>
+          <span class="wf-tag">完成分支并给出合并策略</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 技能库 -->
+  <div class="section">
+    <div class="section-head">
+      <h2 class="section-title">技能库</h2>
+      <span class="section-num">Skills Library — 8 Core Skills</span>
+    </div>
+    <div class="skills-grid">
+      <div class="skill-card">
+        <h4>🤝 Brainstorming</h4>
+        <p>编码前的设计与提问环节，分块展示设计方案并等待用户确认，确保理解一致后再开始实现</p>
+      </div>
+      <div class="skill-card">
+        <h4>🌿 Using Git Worktrees</h4>
+        <p>创建隔离工作树，在新分支上设置项目并验证测试基线，保持主分支干净不受未完成工作污染</p>
+      </div>
+      <div class="skill-card">
+        <h4>📋 Writing Plans</h4>
+        <p>将设计拆解为 2-5 分钟的小任务，输出每个任务的文件路径、完整代码变更和验证步骤</p>
+      </div>
+      <div class="skill-card">
+        <h4>⚡ Subagent-Driven Development</h4>
+        <p>为每个任务启动子代理执行，进行两阶段审核（先对照规范，再检查代码质量），小步提交频繁自测</p>
+      </div>
+      <div class="skill-card">
+        <h4>🧪 Test-Driven Development</h4>
+        <p>强制 RED-GREEN-REFACTOR 循环：写失败测试 → 实现通过 → 重构，并移除任何临时/多余代码</p>
+      </div>
+      <div class="skill-card">
+        <h4>🔍 Requesting Code Review</h4>
+        <p>在关键节点生成代码审查报告，识别严重问题并阻止进度直到修复，同时记录普通问题供后续处理</p>
+      </div>
+      <div class="skill-card">
+        <h4>📥 Receiving Code Review</h4>
+        <p>接收并处理来自其他代理或人类的审查反馈，按严重性排序并逐项解决，直到所有关键问题关闭</p>
+      </div>
+      <div class="skill-card">
+        <h4>🎯 Finishing Development Branch</h4>
+        <p>验证测试通过，提供最终选项：直接合并、发 PR、保留分支继续开发、或放弃并清理工作树</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

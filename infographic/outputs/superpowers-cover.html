@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Superpowers 使用指南</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;500;700&family=Oswald:wght@400;500;700&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --accent: #ff6b4a;
+    --accent-dark: #e54f2a;
+    --bg: #12121e;
+    --bg2: #1a1a2e;
+    --bg-card: #1e1e32;
+    --bg-card2: #23233a;
+    --text: #f5f5f5;
+    --text-dim: #8888aa;
+    --muted: #555577;
+    --divider: rgba(255,255,255,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    width: 1242px;
+    height: 1660px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* left accent bar */
+  body::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: var(--accent);
+    z-index: 10;
+  }
+
+  /* ========== TOP HALF ========== */
+  .top {
+    height: 52%;
+    padding: 40px 48px 28px 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    background: linear-gradient(180deg, #0f0f1a 0%, var(--bg2) 100%);
+    position: relative;
+  }
+
+  /* faint glow */
+  .top::after {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 360px;
+    height: 360px;
+    background: radial-gradient(circle, rgba(255,107,74,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ---- Hero ---- */
+  .hero {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-main { flex: 1; }
+
+  .hero-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 2px;
+    margin-bottom: 12px;
+  }
+
+  .hero-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 78px;
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+
+  .hero-title span { color: var(--accent); }
+
+  .hero-sub {
+    font-size: 15px;
+    color: var(--text-dim);
+    line-height: 1.65;
+    max-width: 560px;
+  }
+
+  .hero-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .stat-box {
+    background: var(--bg-card);
+    border-radius: 4px;
+    padding: 10px 18px;
+    text-align: center;
+    min-width: 96px;
+    border-top: 2px solid var(--accent);
+  }
+
+  .stat-box .num {
+    font-family: 'Oswald', sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-box .label {
+    font-size: 9px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 3px;
+  }
+
+  /* ---- Overview 3 cards ---- */
+  .overview {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ov-card {
+    background: var(--bg-card);
+    border-radius: 3px;
+    padding: 13px 16px;
+    border-top: 2px solid var(--accent);
+  }
+
+  .ov-card h4 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .ov-card p {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ---- Install box ---- */
+  .install-box {
+    background: var(--bg-card);
+    border-radius: 3px;
+    padding: 16px 20px;
+    border-left: 4px solid var(--accent);
+    position: relative;
+    z-index: 1;
+  }
+
+  .install-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 21px;
+    font-weight: 900;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .install-title small {
+    color: var(--accent);
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  .install-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .ins-step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: var(--bg-card2);
+    border-radius: 3px;
+    padding: 10px 14px;
+  }
+
+  .ins-step .n {
+    font-family: 'Oswald', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    min-width: 22px;
+    flex-shrink: 0;
+  }
+
+  .ins-step .ctx { flex: 1; }
+
+  .ins-step .lbl {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .ins-step code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(255,107,74,0.1);
+    padding: 3px 8px;
+    border-radius: 2px;
+    word-break: break-all;
+  }
+
+  .verify {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: rgba(255,107,74,0.06);
+    border: 1px solid rgba(255,107,74,0.2);
+    border-radius: 3px;
+    padding: 9px 14px;
+    margin-top: 8px;
+  }
+
+  .verify-icon { font-size: 16px; }
+
+  .verify p {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .verify strong { color: var(--accent); }
+
+  /* ========== BOTTOM HALF ========== */
+  .bottom {
+    height: 48%;
+    padding: 20px 48px 24px 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--bg2);
+  }
+
+  .bottom-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .bottom-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--text);
+  }
+
+  .bottom-title span { color: var(--accent); }
+
+  .bottom-sub {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .bdiv {
+    height: 1px;
+    background: var(--divider);
+  }
+
+  /* skills 2x4 grid */
+  .skills {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--divider);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .skill {
+    background: var(--bg-card);
+    padding: 10px 12px;
+    border-right: 1px solid var(--divider);
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .skill:nth-child(4n) { border-right: none; }
+  .skill:nth-child(n+5):nth-child(-n+8) { border-bottom: none; }
+
+  .skill-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .skill-desc {
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  /* commands 2col */
+  .cmds {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .cmd-group {
+    background: var(--bg-card);
+    border-radius: 3px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .cmd-g-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--divider);
+    margin-bottom: 2px;
+  }
+
+  .cmd-item {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .cmd-item code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    background: rgba(255,107,74,0.1);
+    padding: 2px 6px;
+    border-radius: 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 110px;
+  }
+
+  .cmd-item span {
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  /* prompts strip */
+  .prompts {
+    background: var(--bg-card);
+    border-radius: 3px;
+    padding: 9px 14px;
+    border-left: 3px solid var(--accent);
+    flex-shrink: 0;
+  }
+
+  .prompts-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 5px;
+  }
+
+  .prompts-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .p {
+    font-size: 10px;
+    color: var(--text-dim);
+    background: var(--bg-card2);
+    padding: 3px 9px;
+    border-radius: 2px;
+    font-style: italic;
+  }
+
+  /* footer */
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 8px;
+    border-top: 1px solid var(--divider);
+    flex-shrink: 0;
+  }
+
+  .footer-text {
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .footer-badge {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    background: var(--bg-card);
+    padding: 3px 12px;
+    border-radius: 2px;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP -->
+<div class="top">
+
+  <div class="hero">
+    <div class="hero-main">
+      <div class="hero-badge">Claude Code Plugin</div>
+      <h1 class="hero-title">Super<span>powers</span></h1>
+      <p class="hero-sub">AI 编码代理可组合技能集 · TDD 驱动 · 两阶段代码审查 · 子代理分工执行</p>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-box">
+        <div class="num">8+</div>
+        <div class="label">核心技能</div>
+      </div>
+      <div class="stat-box">
+        <div class="num">TDD</div>
+        <div class="label">测试驱动</div>
+      </div>
+      <div class="stat-box">
+        <div class="num">2</div>
+        <div class="label">阶段审查</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overview">
+    <div class="ov-card">
+      <h4>定位</h4>
+      <p>为 AI 编码代理打造的可组合技能集，覆盖设计→计划→实现→测试→审查全流程</p>
+    </div>
+    <div class="ov-card">
+      <h4>核心理念</h4>
+      <p>TDD 驱动、两阶段代码审查（规范合规 + 代码质量）、小步提交频繁自测</p>
+    </div>
+    <div class="ov-card">
+      <h4>触发方式</h4>
+      <p>代理自动检测阶段触发，也可通过自然语言显式请求特定技能</p>
+    </div>
+  </div>
+
+  <div class="install-box">
+    <div class="install-title"><small>▼</small> Claude Code 安装方式</div>
+    <div class="install-steps">
+      <div class="ins-step">
+        <div class="n">1</div>
+        <div class="ctx">
+          <div class="lbl">注册市场源</div>
+          <code>/plugin marketplace add obra/superpowers-marketplace</code>
+        </div>
+      </div>
+      <div class="ins-step">
+        <div class="n">2</div>
+        <div class="ctx">
+          <div class="lbl">安装插件</div>
+          <code>/plugin install superpowers@superpowers-marketplace</code>
+        </div>
+      </div>
+      <div class="ins-step">
+        <div class="n">3</div>
+        <div class="ctx">
+          <div class="lbl">更新插件</div>
+          <code>/plugin update superpowers</code>
+        </div>
+      </div>
+    </div>
+    <div class="verify">
+      <div class="verify-icon">✅</div>
+      <p>启动新会话，输入触发语如 <strong>"帮我规划这个功能"</strong> 或 <strong>"让我们调试这个问题"</strong> 验证安装</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM -->
+<div class="bottom">
+
+  <div class="bottom-head">
+    <div class="bottom-title">常用 Skills / <span>Commands 速查</span></div>
+    <div class="bottom-sub">可直接在会话中使用的触发语</div>
+  </div>
+
+  <div class="bdiv"></div>
+
+  <!-- skills 2x4 -->
+  <div class="skills">
+    <div class="skill">
+      <div class="skill-name">🤝 brainstorming</div>
+      <div class="skill-desc">编码前的设计与提问，分块展示设计并等待确认</div>
+    </div>
+    <div class="skill">
+      <div class="skill-name">🌿 using-git-worktrees</div>
+      <div class="skill-desc">创建隔离工作树，保持主分支干净</div>
+    </div>
+    <div class="skill">
+      <div class="skill-name">📋 writing-plans</div>
+      <div class="skill-desc">将设计拆成 2-5 分钟小任务，输出文件路径和代码片段</div>
+    </div>
+    <div class="skill">
+      <div class="skill-name">⚡ subagent-driven-dev</div>
+      <div class="skill-desc">子代理执行任务，两阶段审核，小步提交频繁自测</div>
+    </div>
+    <div class="skill">
+      <div class="skill-name">🧪 test-driven-development</div>
+      <div class="skill-desc">RED → GREEN → REFACTOR 循环，删除临时代码</div>
+    </div>
+    <div class="skill">
+      <div class="skill-name">🔍 requesting-code-review</div>
+      <div class="skill-desc">生成审查报告，严重问题阻塞推进</div>
+    </div>
+    <div class="skill">
+      <div class="skill-name">📥 receiving-code-review</div>
+      <div class="skill-desc">处理审查反馈，按严重性逐项解决</div>
+    </div>
+    <div class="skill">
+      <div class="skill-name">🎯 finishing-dev-branch</div>
+      <div class="skill-desc">验证测试通过，提供合并/PR/保留/放弃选项</div>
+    </div>
+  </div>
+
+  <!-- commands 2col -->
+  <div class="cmds">
+    <div class="cmd-group">
+      <div class="cmd-g-label">安装 & 更新</div>
+      <div class="cmd-item">
+        <code>/plugin marketplace add obra/...</code>
+        <span>添加市场源</span>
+      </div>
+      <div class="cmd-item">
+        <code>/plugin install superpowers@...</code>
+        <span>安装插件</span>
+      </div>
+      <div class="cmd-item">
+        <code>/plugin update superpowers</code>
+        <span>更新插件</span>
+      </div>
+    </div>
+    <div class="cmd-group">
+      <div class="cmd-g-label">技能触发</div>
+      <div class="cmd-item">
+        <code>帮我做 brainstorm</code>
+        <span>触发 brainstorming</span>
+      </div>
+      <div class="cmd-item">
+        <code>帮我写实现计划</code>
+        <span>触发 writing-plans</span>
+      </div>
+      <div class="cmd-item">
+        <code>开始执行计划</code>
+        <span>触发 executing-plans</span>
+      </div>
+    </div>
+    <div class="cmd-group">
+      <div class="cmd-g-label">测试 & 审查</div>
+      <div class="cmd-item">
+        <code>写失败测试再实现</code>
+        <span>触发 TDD</span>
+      </div>
+      <div class="cmd-item">
+        <code>请审查当前代码</code>
+        <span>触发 code-review</span>
+      </div>
+      <div class="cmd-item">
+        <code>完成开发分支</code>
+        <span>触发 finishing-branch</span>
+      </div>
+    </div>
+    <div class="cmd-group">
+      <div class="cmd-g-label">开发者测试</div>
+      <div class="cmd-item">
+        <code>./run-skill-tests.sh</code>
+        <span>快速测试</span>
+      </div>
+      <div class="cmd-item">
+        <code>--integration</code>
+        <span>集成测试</span>
+      </div>
+      <div class="cmd-item">
+        <code>--verbose --test xxx.sh</code>
+        <span>调试模式</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- prompts -->
+  <div class="prompts">
+    <div class="prompts-label">触发短语示例</div>
+    <div class="prompts-list">
+      <span class="p">"帮我规划这个功能"</span>
+      <span class="p">"帮我把设计分成小任务"</span>
+      <span class="p">"现在开始执行计划"</span>
+      <span class="p">"写失败测试再实现"</span>
+      <span class="p">"请审查当前分支"</span>
+      <span class="p">"完成分支并给出合并策略"</span>
+    </div>
+  </div>
+
+  <!-- footer -->
+  <div class="footer">
+    <div class="footer-text">Superpowers · AI Coding Agent 可组合技能集 · obra/superpowers</div>
+    <div class="footer-badge">TDD · 审查 · 子代理</div>
+  </div>
+
+</div>
+
+</body>
+</html>

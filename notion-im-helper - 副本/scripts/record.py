@@ -293,34 +293,10 @@ def build_blocks_for_type(record_type, content):
         return [build_todo(item, checked=True) for item in items]
 
     if record_type == "link":
-        # Extract URL(s) from content (may include title text)
-        url_pattern = r'(https?://[^\s]+)'
-        urls = re.findall(url_pattern, content)
-        remaining = re.sub(url_pattern, '', content).strip()
-
-        if not urls:
-            # No URL found, treat entire content as URL
-            url = content.strip()
-            if not url.startswith("http"):
-                url = f"https://{url}"
-            return [build_bookmark(url)]
-
-        blocks = []
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-
-        # Build callout with title + time
-        if remaining:
-            callout_text = f"{now_str} {remaining}"
-            blocks.append(build_callout(cfg["emoji"], callout_text, cfg["color"]))
-        else:
-            # No title text, just use time
-            blocks.append(build_callout(cfg["emoji"], now_str, cfg["color"]))
-
-        # Add bookmark blocks for each URL
-        for url in urls:
-            blocks.append(build_bookmark(url))
-
-        return blocks
+        url = content.strip()
+        if not url.startswith("http"):
+            url = f"https://{url}"
+        return [build_bookmark(url)]
 
     if record_type == "image":
         path = content.strip()

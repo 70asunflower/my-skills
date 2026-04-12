@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Superpowers 使用指南</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --accent: #e8613a;
+    --accent-light: #ff6b4a;
+    --accent-dark: #c44f2a;
+    --bg: #0d0d0d;
+    --bg-card: #1a1a1a;
+    --bg-card2: #222222;
+    --text: #f0ece4;
+    --text-dim: #aaaaaa;
+    --muted: #666666;
+    --divider: rgba(255,255,255,0.08);
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700;900&family=Noto+Sans+SC:wght@400;500;700&family=Oswald:wght@400;500;700&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  body {
+    font-family: 'Inter', 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    width: 1242px;
+    min-height: 2200px;
+    padding: 48px 52px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .header-badge {
+    background: var(--accent);
+    color: white;
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 2px;
+  }
+
+  .header-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+
+  .header-title span {
+    color: var(--accent);
+  }
+
+  .header-sub {
+    font-size: 18px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  /* ===== SECTION ===== */
+  .section {
+    background: var(--bg-card);
+    border-radius: 4px;
+    padding: 32px 36px;
+    border-left: 5px solid var(--accent);
+  }
+
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title .num {
+    font-family: 'Oswald', sans-serif;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--accent);
+    opacity: 0.3;
+  }
+
+  /* ===== OVERVIEW ===== */
+  .overview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 4px;
+  }
+
+  .overview-item {
+    background: var(--bg-card2);
+    border-radius: 4px;
+    padding: 20px 22px;
+    border-top: 3px solid var(--accent);
+  }
+
+  .overview-item h4 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .overview-item p {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+
+  /* ===== INSTALL ===== */
+  .install-platforms {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .platform-card {
+    background: var(--bg-card2);
+    border-radius: 4px;
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .platform-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+
+  .platform-name::before {
+    content: "▶ ";
+    color: var(--accent);
+    font-size: 10px;
+  }
+
+  .platform-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-light);
+    background: rgba(232, 97, 58, 0.1);
+    padding: 6px 10px;
+    border-radius: 3px;
+    line-height: 1.5;
+    word-break: break-all;
+  }
+
+  /* ===== WORKFLOW ===== */
+  .workflow-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+  }
+
+  .workflow-steps::before {
+    content: "";
+    position: absolute;
+    left: 24px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent), rgba(232,97,58,0.1));
+  }
+
+  .workflow-step {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    position: relative;
+    padding: 16px 20px;
+    background: var(--bg-card2);
+    border-radius: 4px;
+  }
+
+  .step-num {
+    font-family: 'Oswald', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    min-width: 48px;
+    z-index: 1;
+  }
+
+  .step-content h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .step-content p {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .step-content code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-light);
+    background: rgba(232, 97, 58, 0.1);
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  /* ===== SKILLS ===== */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .skill-card {
+    background: var(--bg-card2);
+    border-radius: 4px;
+    padding: 18px 22px;
+    border-left: 3px solid var(--accent);
+  }
+
+  .skill-card h4 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  .skill-card p {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .skill-card.highlight {
+    border-left-color: #ffd700;
+    background: linear-gradient(135deg, var(--bg-card2) 0%, rgba(255,215,0,0.05) 100%);
+  }
+
+  .skill-card.highlight h4 {
+    color: #ffd700;
+  }
+
+  /* ===== COMMANDS ===== */
+  .commands-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .commands-table th {
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--accent);
+    background: var(--bg-card2);
+  }
+
+  .commands-table td {
+    font-size: 12px;
+    color: var(--text-dim);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--divider);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  .commands-table td:first-child {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-light);
+    white-space: nowrap;
+  }
+
+  .commands-table tr:hover td {
+    background: var(--bg-card2);
+  }
+
+  /* ===== TIPS ===== */
+  .tips-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .tip-card {
+    background: var(--bg-card2);
+    border-radius: 4px;
+    padding: 18px 22px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .tip-icon {
+    font-size: 24px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .tip-content h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .tip-content p {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ===== PROMPTS ===== */
+  .prompts-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .prompt-item {
+    background: var(--bg-card2);
+    border-radius: 4px;
+    padding: 14px 18px;
+    border-left: 3px solid var(--accent);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .prompt-bullet {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .prompt-text {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .prompt-text::before {
+    content: """;
+  }
+
+  .prompt-text::after {
+    content: """;
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    text-align: center;
+    padding-top: 24px;
+    border-top: 1px solid var(--divider);
+  }
+
+  .footer-text {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .footer-badge {
+    display: inline-block;
+    margin-top: 12px;
+    background: var(--bg-card2);
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  /* ===== TEST SECTION ===== */
+  .test-section {
+    background: linear-gradient(135deg, var(--bg-card) 0%, rgba(232,97,58,0.08) 100%);
+    border-left-color: #ffd700;
+  }
+
+  .test-section .section-title {
+    color: #ffd700;
+  }
+
+  .test-commands {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .test-cmd {
+    background: var(--bg-card2);
+    border-radius: 4px;
+    padding: 12px 16px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .test-cmd-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #ffd700;
+    background: rgba(255,215,0,0.1);
+    padding: 4px 10px;
+    border-radius: 3px;
+    flex: 1;
+    word-break: break-all;
+  }
+
+  .test-cmd-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    min-width: 180px;
+    text-align: right;
+  }
+
+  /* ===== DIVIDER ===== */
+  .section-divider {
+    height: 1px;
+    background: var(--divider);
+    margin: 4px 0;
+  }
+
+  /* ===== BEST PRACTICES ===== */
+  .practices-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .practice-item {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    background: var(--bg-card2);
+    border-radius: 4px;
+    padding: 14px 18px;
+  }
+
+  .practice-check {
+    color: var(--accent);
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .practice-text {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .practice-text strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ===== PLATFORM MATRIX ===== */
+  .platform-matrix {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .pm-item {
+    background: var(--bg-card2);
+    border-radius: 4px;
+    padding: 16px 18px;
+    text-align: center;
+  }
+
+  .pm-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .pm-cmd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    word-break: break-all;
+  }
+
+  /* ===== TAG ===== */
+  .tag {
+    display: inline-block;
+    background: rgba(232, 97, 58, 0.15);
+    color: var(--accent-light);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 2px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+
+  /* ===== BIG STAT ===== */
+  .stat-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .stat-box {
+    flex: 1;
+    background: var(--bg-card2);
+    border-radius: 4px;
+    padding: 20px;
+    text-align: center;
+    border-top: 3px solid var(--accent);
+  }
+
+  .stat-num {
+    font-family: 'Oswald', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div style="flex: 1;">
+    <div class="header-badge">Claude Code Plugin</div>
+    <h1 class="header-title">Super<span>powers</span></h1>
+    <p class="header-sub">AI 编码代理可组合技能集 · 从设计到代码审查的完整开发工作流</p>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stat-row">
+  <div class="stat-box">
+    <div class="stat-num">8+</div>
+    <div class="stat-label">核心技能</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">6</div>
+    <div class="stat-label">主流平台</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">TDD</div>
+    <div class="stat-label">测试驱动</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num">3</div>
+    <div class="stat-label">质量门禁</div>
+  </div>
+</div>
+
+<!-- OVERVIEW -->
+<div class="section">
+  <h2 class="section-title"><span class="num">01</span> 概述</h2>
+  <div class="overview-grid">
+    <div class="overview-item">
+      <h4>定位</h4>
+      <p>为 AI 编码代理打造的可组合技能集和工作流系统，覆盖设计、计划、分工、实现、测试、审查全流程</p>
+    </div>
+    <div class="overview-item">
+      <h4>核心理念</h4>
+      <p>强调 TDD 驱动、两阶段代码审查、子代理分工执行，以及系统化调试能力</p>
+    </div>
+    <div class="overview-item">
+      <h4>触发方式</h4>
+      <p>代理自动检测开发任务阶段并触发对应技能，也可通过自然语言显式请求特定技能</p>
+    </div>
+  </div>
+</div>
+
+<!-- PLATFORM INSTALL -->
+<div class="section">
+  <h2 class="section-title"><span class="num">02</span> 快速安装（6大平台）</h2>
+  <div class="platform-matrix">
+    <div class="pm-item">
+      <div class="pm-name">Claude 插件市场</div>
+      <div class="pm-cmd">/plugin install superpowers@claude-plugins-official</div>
+    </div>
+    <div class="pm-item">
+      <div class="pm-name">Claude Code 市场</div>
+      <div class="pm-cmd">/plugin marketplace add obra/superpowers-marketplace<br>/plugin install superpowers@superpowers-marketplace</div>
+    </div>
+    <div class="pm-item">
+      <div class="pm-name">Cursor</div>
+      <div class="pm-cmd">/add-plugin superpowers</div>
+    </div>
+    <div class="pm-item">
+      <div class="pm-name">Codex</div>
+      <div class="pm-cmd">Fetch from https://...INSTALL.md</div>
+    </div>
+    <div class="pm-item">
+      <div class="pm-name">OpenCode</div>
+      <div class="pm-cmd">Fetch from https://...INSTALL.md</div>
+    </div>
+    <div class="pm-item">
+      <div class="pm-name">GitHub Copilot CLI</div>
+      <div class="pm-cmd">copilot plugin marketplace add obra/superpowers-marketplace<br>copilot plugin install superpowers@...</div>
+    </div>
+  </div>
+  <div style="margin-top: 16px; padding: 14px 18px; background: var(--bg-card2); border-radius: 4px; border-left: 3px solid var(--accent);">
+    <p style="font-size: 12px; color: var(--text-dim); line-height: 1.6;">
+      <strong style="color: var(--text);">Gemini CLI:</strong>
+      <code style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--accent-light); background: rgba(232,97,58,0.1); padding: 2px 6px; border-radius: 2px; margin-left: 8px;">gemini extensions install https://github.com/obra/superpowers</code>
+      &nbsp;&nbsp;
+      <strong style="color: var(--text);">更新命令:</strong>
+      <code style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--accent-light); background: rgba(232,97,58,0.1); padding: 2px 6px; border-radius: 2px;">/plugin update superpowers</code>
+    </p>
+  </div>
+</div>
+
+<!-- WORKFLOW -->
+<div class="section">
+  <h2 class="section-title"><span class="num">03</span> 推荐使用流程</h2>
+  <div class="workflow-steps">
+    <div class="workflow-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>启动 Brainstorming</h4>
+        <p>用自然语言描述需求，代理通过提问澄清需求，分段展示设计文档并等待确认</p>
+        <code>"我要实现X功能，需求是…先帮我做需求澄清并给出设计方案"</code>
+      </div>
+    </div>
+    <div class="workflow-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>审核并批准设计</h4>
+        <p>阅读代理输出的分段设计，逐段确认或请求修改，确认后再继续</p>
+      </div>
+    </div>
+    <div class="workflow-step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>生成实现计划 Writing Plans</h4>
+        <p>设计分解为 2-5 分钟的小任务，每个任务包含：目标描述 / 文件路径与变更 / 完整代码片段 / 验证步骤</p>
+      </div>
+    </div>
+    <div class="workflow-step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>创建隔离工作区 Using Git Worktrees</h4>
+        <p>在新分支创建隔离工作树，运行安装和测试命令，确保干净的测试基线</p>
+      </div>
+    </div>
+    <div class="workflow-step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <h4>执行计划 Subagent-Driven Development</h4>
+        <p>每个任务启动子代理 → 子代理按规范自测(spec compliance) → 代码质量审查 → 提交并运行测试</p>
+      </div>
+    </div>
+    <div class="workflow-step">
+      <div class="step-num">6</div>
+      <div class="step-content">
+        <h4>测试驱动开发 TDD</h4>
+        <p>始终遵循 RED → GREEN → REFACTOR 循环：写失败测试 → 实现代码 → 检查通过 → 重构并清理临时代码</p>
+      </div>
+    </div>
+    <div class="workflow-step">
+      <div class="step-num">7</div>
+      <div class="step-content">
+        <h4>代码审查 Requesting / Receiving Code Review</h4>
+        <p>关键节点生成审查报告，按严重性分类（CRITICAL / HIGH / MEDIUM / LOW），严重问题阻塞任务推进</p>
+      </div>
+    </div>
+    <div class="workflow-step">
+      <div class="step-num">8</div>
+      <div class="step-content">
+        <h4>完成分支 Finishing Development Branch</h4>
+        <p>所有任务完成且测试通过后，提供选项：直接合并 / 发起 PR / 保留分支 / 放弃并清理工作树</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SKILLS -->
+<div class="section">
+  <h2 class="section-title"><span class="num">04</span> 技能库</h2>
+  <div class="skills-grid">
+    <div class="skill-card highlight">
+      <h4>🤝 brainstorming</h4>
+      <p>编码前的设计与提问环节，分块展示设计方案并等待用户确认，确保理解一致后再开始实现</p>
+    </div>
+    <div class="skill-card">
+      <h4>🌿 using-git-worktrees</h4>
+      <p>创建隔离工作树，在新分支上设置项目并验证测试基线，保持主分支干净不受未完成工作污染</p>
+    </div>
+    <div class="skill-card highlight">
+      <h4>📋 writing-plans</h4>
+      <p>将设计拆解为 2-5 分钟的小任务，输出每个任务的文件路径、完整代码变更和验证步骤</p>
+    </div>
+    <div class="skill-card">
+      <h4>⚡ subagent-driven-development</h4>
+      <p>为每个任务启动子代理执行，进行两阶段审核（先对照规范，再检查代码质量），小步提交频繁自测</p>
+    </div>
+    <div class="skill-card highlight">
+      <h4>🧪 test-driven-development</h4>
+      <p>强制 RED-GREEN-REFACTOR 循环：写失败测试 → 实现通过 → 重构，并移除任何临时/多余代码</p>
+    </div>
+    <div class="skill-card">
+      <h4>🔍 requesting-code-review</h4>
+      <p>在关键节点生成代码审查报告，识别严重问题并阻止进度直到修复，同时记录普通问题供后续处理</p>
+    </div>
+    <div class="skill-card">
+      <h4>📥 receiving-code-review</h4>
+      <p>接收并处理来自其他代理或人类的审查反馈，按严重性排序并逐项解决，直到所有关键问题关闭</p>
+    </div>
+    <div class="skill-card">
+      <h4>🎯 finishing-a-development-branch</h4>
+      <p>验证测试通过，提供最终选项：直接合并、发 PR、保留分支继续开发、或放弃并清理工作树</p>
+    </div>
+  </div>
+</div>
+
+<!-- COMMANDS -->
+<div class="section">
+  <h2 class="section-title"><span class="num">05</span> 常用命令</h2>
+  <table class="commands-table">
+    <thead>
+      <tr>
+        <th>命令</th>
+        <th>功能</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>/plugin install superpowers@…</td>
+        <td>安装 Superpowers 插件（Claude / Claude Code）</td>
+      </tr>
+      <tr>
+        <td>/plugin marketplace add obra/…</td>
+        <td>添加插件市场源</td>
+      </tr>
+      <tr>
+        <td>/plugin update superpowers</td>
+        <td>更新到最新版本</td>
+      </tr>
+      <tr>
+        <td>gemini extensions install …</td>
+        <td>在 Gemini CLI 安装扩展</td>
+      </tr>
+      <tr>
+        <td>gemini extensions update …</td>
+        <td>更新 Gemini 扩展</td>
+      </tr>
+      <tr>
+        <td>copilot plugin marketplace add …</td>
+        <td>在 GitHub Copilot CLI 添加市场</td>
+      </tr>
+      <tr>
+        <td>copilot plugin install …</td>
+        <td>在 Copilot CLI 安装插件</td>
+      </tr>
+      <tr>
+        <td>./run-skill-tests.sh</td>
+        <td>运行快速技能测试（需 Claude Code CLI）</td>
+      </tr>
+      <tr>
+        <td>./run-skill-tests.sh --integration</td>
+        <td>运行完整集成测试</td>
+      </tr>
+      <tr>
+        <td>./run-skill-tests.sh --verbose …</td>
+        <td>调试模式，打印完整 Claude 输出</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- TDD DETAIL -->
+<div class="section">
+  <h2 class="section-title"><span class="num">06</span> TDD 强制流程</h2>
+  <div style="display: flex; gap: 14px; margin-bottom: 16px;">
+    <div style="flex: 1; background: var(--bg-card2); border-radius: 4px; padding: 18px; text-align: center; border-top: 3px solid #ff4444;">
+      <div style="font-family: 'Oswald'; font-size: 28px; font-weight: 700; color: #ff4444; margin-bottom: 6px;">RED</div>
+      <p style="font-size: 12px; color: var(--text-dim);">先写 failing 测试<br>验证测试正确失败</p>
+    </div>
+    <div style="flex: 1; background: var(--bg-card2); border-radius: 4px; padding: 18px; text-align: center; border-top: 3px solid #44bb44;">
+      <div style="font-family: 'Oswald'; font-size: 28px; font-weight: 700; color: #44bb44; margin-bottom: 6px;">GREEN</div>
+      <p style="font-size: 12px; color: var(--text-dim);">实现让测试通过<br>最小化代码改动</p>
+    </div>
+    <div style="flex: 1; background: var(--bg-card2); border-radius: 4px; padding: 18px; text-align: center; border-top: 3px solid #4488ff;">
+      <div style="font-family: 'Oswald'; font-size: 28px; font-weight: 700; color: #4488ff; margin-bottom: 6px;">REFACTOR</div>
+      <p style="font-size: 12px; color: var(--text-dim);">重构代码结构<br>删除临时代码</p>
+    </div>
+  </div>
+  <div style="background: var(--bg-card2); border-radius: 4px; padding: 14px 18px; border-left: 3px solid var(--accent);">
+    <p style="font-size: 12px; color: var(--text-dim); line-height: 1.6;">
+      <strong style="color: var(--text);">关键约束：</strong>代理在 REFACTOR 阶段会<strong style="color: var(--accent-light);">自动删除任何为让测试通过而临时添加的代码</strong>，确保代码库始终干净、无多余逻辑积累。
+    </p>
+  </div>
+</div>
+
+<!-- BEST PRACTICES -->
+<div class="section">
+  <h2 class="section-title"><span class="num">07</span> 最佳实践</h2>
+  <div class="practices-list">
+    <div class="practice-item">
+      <div class="practice-check">✓</div>
+      <div class="practice-text"><strong>设计优先</strong>：在任何自动化写代码之前，通过 brainstorming 获取清晰设计并确认，避免返工</div>
+    </div>
+    <div class="practice-item">
+      <div class="practice-check">✓</div>
+      <div class="practice-text"><strong>小步提交</strong>：每个任务 2-5 分钟，频繁自测，利用 git worktrees 保持主分支干净</div>
+    </div>
+    <div class="practice-item">
+      <div class="practice-check">✓</div>
+      <div class="practice-text"><strong>明确验收标准</strong>：每个任务必须有明确的测试/脚本/手动验证步骤，不能含糊</div>
+    </div>
+    <div class="practice-item">
+      <div class="practice-check">✓</div>
+      <div class="practice-text"><strong>严重性分类</strong>：CRITICAL/HIGH 必须修复才能继续，MEDIUM 可延后，LOW 可选</div>
+    </div>
+    <div class="practice-item">
+      <div class="practice-check">✓</div>
+      <div class="practice-text"><strong>两阶段审查</strong>：子代理每次提交前先自测 spec 合规性，再做代码质量审查</div>
+    </div>
+  </div>
+</div>
+
+<!-- QA -->
+<div class="section">
+  <h2 class="section-title"><span class="num">08</span> 常见问题</h2>
+  <div class="tips-grid">
+    <div class="tip-card">
+      <div class="tip-icon">❓</div>
+      <div class="tip-content">
+        <h4>如何手动触发某个 skill？</h4>
+        <p>直接在会话里说"帮我做 brainstorming"或"帮我写计划"，代理会在合适时机自动选择对应技能</p>
+      </div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🔄</div>
+      <div class="tip-content">
+        <h4>插件如何更新？</h4>
+        <p>Claude: /plugin update superpowers<br>Gemini: gemini extensions update superpowers</p>
+      </div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🐛</div>
+      <div class="tip-content">
+        <h4>子代理写出坏代码怎么办？</h4>
+        <p>两阶段审查机制会拦截——规范合规检查 + 代码质量审查，严重问题阻止任务推进并标记待修复</p>
+      </div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🧪</div>
+      <div class="tip-content">
+        <h4>测试基线不干净怎么办？</h4>
+        <p>使用 using-git-worktrees 创建隔离工作树，确保每次开发都在干净测试基线上开始</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROMPTS -->
+<div class="section">
+  <h2 class="section-title"><span class="num">09</span> 触发短语示例</h2>
+  <div class="prompts-flow">
+    <div class="prompt-item">
+      <div class="prompt-bullet">→</div>
+      <div class="prompt-text">帮我把这个设计分成小任务并给出每个任务的文件变更和测试步骤</div>
+    </div>
+    <div class="prompt-item">
+      <div class="prompt-bullet">→</div>
+      <div class="prompt-text">现在开始执行计划，从第一个任务开始</div>
+    </div>
+    <div class="prompt-item">
+      <div class="prompt-bullet">→</div>
+      <div class="prompt-text">为刚写的功能生成失败测试，然后实现并修复直到测试通过</div>
+    </div>
+    <div class="prompt-item">
+      <div class="prompt-bullet">→</div>
+      <div class="prompt-text">请对当前分支进行代码审查并列出严重问题</div>
+    </div>
+    <div class="prompt-item">
+      <div class="prompt-bullet">→</div>
+      <div class="prompt-text">完成当前开发分支并给我可选的合并策略</div>
+    </div>
+    <div class="prompt-item">
+      <div class="prompt-bullet">→</div>
+      <div class="prompt-text">我要实现 X 功能，需求是…先帮我做需求澄清并给出设计方案</div>
+    </div>
+  </div>
+</div>
+
+<!-- TEST COMMANDS (for contributors) -->
+<div class="section test-section">
+  <h2 class="section-title"><span class="num">10</span> 测试命令（开发者/贡献者）</h2>
+  <div class="test-commands">
+    <div class="test-cmd">
+      <div class="test-cmd-code">./run-skill-tests.sh</div>
+      <div class="test-cmd-desc">快速技能测试（需 Claude Code CLI）</div>
+    </div>
+    <div class="test-cmd">
+      <div class="test-cmd-code">./run-skill-tests.sh --integration</div>
+      <div class="test-cmd-desc">运行完整集成测试</div>
+    </div>
+    <div class="test-cmd">
+      <div class="test-cmd-code">./run-skill-tests.sh --test test-subagent-driven-development.sh</div>
+      <div class="test-cmd-desc">运行指定测试</div>
+    </div>
+    <div class="test-cmd">
+      <div class="test-cmd-code">./run-skill-tests.sh --timeout 900</div>
+      <div class="test-cmd-desc">CI 中运行（设置 15 分钟超时）</div>
+    </div>
+    <div class="test-cmd">
+      <div class="test-cmd-code">./run-skill-tests.sh --verbose --test test-xxx.sh</div>
+      <div class="test-cmd-desc">调试模式：打印完整 Claude 输出</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p class="footer-text">
+    Superpowers — AI Coding Agent 可组合技能集<br>
+    覆盖设计 · 计划 · 实现 · 测试 · 审查完整流程
+  </p>
+  <div class="footer-badge">obra / superpowers</div>
+</div>
+
+</body>
+</html>
