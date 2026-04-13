@@ -77,11 +77,20 @@ def build_todo(text, checked=False):
     }
 
 
-def build_bookmark(url):
+def build_bookmark(url, caption=None):
+    """Build a bookmark block. Notion API only supports 'url' and 'caption' fields.
+
+    Note: bookmark block does NOT have a 'rich_text' field like text blocks.
+    Use 'caption' (rich_text array) for description text.
+    The title/description/thumbnail are auto-fetched by Notion from the URL.
+    """
+    bookmark_data = {"url": url, "caption": []}
+    if caption:
+        bookmark_data["caption"] = split_rich_text(caption)
     return {
         "object": "block",
         "type": "bookmark",
-        "bookmark": {"url": url, "rich_text": split_rich_text(url)},
+        "bookmark": bookmark_data,
     }
 
 
@@ -305,20 +314,10 @@ def build_blocks_for_type(record_type, content):
                 url = f"https://{url}"
             return [build_bookmark(url)]
 
+        # Pure bookmark cards — Notion auto-fetches title & thumbnail
         blocks = []
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-
-        # Build callout with title + time
-        if remaining:
-            callout_text = f"{now_str} {remaining}"
-            blocks.append(build_callout(cfg["emoji"], callout_text, cfg["color"]))
-        else:
-            # No title text, just use time
-            blocks.append(build_callout(cfg["emoji"], now_str, cfg["color"]))
-
-        # Add bookmark blocks for each URL
         for url in urls:
-            blocks.append(build_bookmark(url))
+            blocks.append(build_bookmark(url, caption=remaining if remaining else None))
 
         return blocks
 
