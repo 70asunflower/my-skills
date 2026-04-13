@@ -360,20 +360,12 @@ def build_blocks_for_type(record_type, content):
         lines = clean_text.split("\n")
         paragraphs = [line for line in lines if line.strip()]  # skip blank lines
 
-        if len(paragraphs) <= 1:
-            # Single paragraph: put everything in callout rich_text (compact view)
-            callout_text = now_str
-            if paragraphs:
-                callout_text += " " + paragraphs[0]
-            if meta_line:
-                callout_text += " | " + meta_line
-            return [build_callout(cfg["emoji"], callout_text, cfg["color"])]
-        else:
-            # Multiple paragraphs: timestamp in callout, paragraphs as children
-            children = [build_paragraph(p) for p in paragraphs]
-            if meta_line:
-                children.append(build_paragraph(meta_line))
-            return [build_callout(cfg["emoji"], now_str, cfg["color"], children=children)]
+        # Timestamp in callout rich_text, content in children paragraphs
+        # This ensures time and content are on separate lines
+        children = [build_paragraph(p) for p in paragraphs]
+        if meta_line:
+            children.append(build_paragraph(meta_line))
+        return [build_callout(cfg["emoji"], now_str, cfg["color"], children=children)]
 
     return []
 
