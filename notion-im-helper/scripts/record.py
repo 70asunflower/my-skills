@@ -397,7 +397,11 @@ def parse_format_line(line):
 
 def cmd_record(args):
     cfg = TYPE_CONFIG.get(args.type, TYPE_CONFIG["idea"])
-    full_content = " ".join(args.content)
+    if args.stdin_content:
+        # Read content from stdin to avoid shell variable expansion (e.g. PowerShell $ sign)
+        full_content = sys.stdin.read().strip()
+    else:
+        full_content = " ".join(args.content)
     blocks = []
 
     # Check if we need a day separator
@@ -520,7 +524,9 @@ def main():
     # record command
     p = sub.add_parser("record")
     p.add_argument("--type", required=True)
-    p.add_argument("content", nargs="+")
+    p.add_argument("--stdin-content", action="store_true", dest="stdin_content",
+                   help="Read content from stdin instead of args (avoids shell variable expansion)")
+    p.add_argument("content", nargs="*")
     p.set_defaults(func=cmd_record)
 
     # heading command
