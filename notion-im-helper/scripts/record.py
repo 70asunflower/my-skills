@@ -395,17 +395,27 @@ def parse_format_line(line):
     return None
 
 
+PENDING_CONTENT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".pending_content.txt")
+
+
 def cmd_record(args):
     cfg = TYPE_CONFIG.get(args.type, TYPE_CONFIG["idea"])
-    if args.stdin_content:
-        # Read content from stdin to avoid shell variable expansion (e.g. PowerShell $ sign)
-        full_content = sys.stdin.read().strip()
-    elif args.file_path:
+    if args.file_path:
         # Read content from file (avoids shell encoding and variable expansion issues)
         with open(args.file_path, "r", encoding="utf-8") as f:
             full_content = f.read().strip()
-    else:
+    elif args.stdin_content:
+        # Read content from stdin to avoid shell variable expansion (e.g. PowerShell $ sign)
+        full_content = sys.stdin.read().strip()
+    elif args.content:
         full_content = " ".join(args.content)
+    elif os.path.exists(PENDING_CONTENT_FILE):
+        # Auto-read from pending content file (most reliable for AI callers)
+        with open(PENDING_CONTENT_FILE, "r", encoding="utf-8") as f:
+            full_content = f.read().strip()
+        os.remove(PENDING_CONTENT_FILE)  # Clean up after reading
+    else:
+        full_content = ""
     blocks = []
 
     # Check if we need a day separator
