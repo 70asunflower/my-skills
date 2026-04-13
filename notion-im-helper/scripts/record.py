@@ -400,6 +400,10 @@ def cmd_record(args):
     if args.stdin_content:
         # Read content from stdin to avoid shell variable expansion (e.g. PowerShell $ sign)
         full_content = sys.stdin.read().strip()
+    elif args.file_path:
+        # Read content from file (avoids shell encoding and variable expansion issues)
+        with open(args.file_path, "r", encoding="utf-8") as f:
+            full_content = f.read().strip()
     else:
         full_content = " ".join(args.content)
     blocks = []
@@ -526,6 +530,8 @@ def main():
     p.add_argument("--type", required=True)
     p.add_argument("--stdin-content", action="store_true", dest="stdin_content",
                    help="Read content from stdin instead of args (avoids shell variable expansion)")
+    p.add_argument("--file", dest="file_path", default=None,
+                   help="Read content from file (avoids shell encoding issues)")
     p.add_argument("content", nargs="*")
     p.set_defaults(func=cmd_record)
 
