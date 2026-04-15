@@ -396,6 +396,7 @@ def parse_format_line(line):
 
 
 PENDING_CONTENT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".pending_content.txt")
+PENDING_IMAGE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".pending_image.jpg")
 
 
 def cmd_record(args):
@@ -422,33 +423,47 @@ def cmd_record(args):
     if check_need_day_separator():
         blocks.append(build_divider())
 
-    # For callout-wrapped types (idea/diary/note/question/quote),
-    # skip format-line parsing to keep content intact inside one callout.
-    # Other types (link/image/todo/done) don't have this issue.
-    callout_types = {"idea", "diary", "note", "question", "quote"}
+    # Check for pending image file — if present, image block + caption (like link style)
+    has_pending_image = os.path.exists(PENDING_IMAGE_FILE)
+    if has_pending_image:
+        file_id = upload_file(PENDING_IMAGE_FILE)
+        if file_id:
+            # Image block with caption (like link's bookmark + caption style)
+            caption = full_content if full_content else None
+            blocks.append(build_image_block(file_id, caption=caption))
+            os.remove(PENDING_IMAGE_FILE)  # Clean up
+        else:
+            print("ERROR| 图片上传失败")
+            return
 
-    if args.type in callout_types:
-        # Pass entire content directly — no format-line splitting
-        blocks.extend(build_blocks_for_type(args.type, full_content))
-    else:
-        # Multi-line: check each line for format patterns first
-        lines = full_content.split("\n")
-        content_lines = []
-        for line in lines:
-            fmt_block = parse_format_line(line)
-            if fmt_block is not None:
-                # Flush any accumulated content lines as a callout first
-                if content_lines:
-                    content_text = "\n".join(content_lines)
-                    blocks.extend(build_blocks_for_type(args.type, content_text))
-                    content_lines = []
-                blocks.append(fmt_block)
-            else:
-                content_lines.append(line)
+    if not has_pending_image:
+        # For callout-wrapped types (idea/diary/note/question/quote),
+        # skip format-line parsing to keep content intact inside one callout.
+        # Other types (link/image/todo/done) don't have this issue.
+        callout_types = {"idea", "diary", "note", "question", "quote"}
 
-        # Remaining content lines
-        if content_lines:
-            blocks.extend(build_blocks_for_type(args.type, "\n".join(content_lines)))
+        if args.type in callout_types:
+            # Pass entire content directly — no format-line splitting
+            blocks.extend(build_blocks_for_type(args.type, full_content))
+        else:
+            # Multi-line: check each line for format patterns first
+            lines = full_content.split("\n")
+            content_lines = []
+            for line in lines:
+                fmt_block = parse_format_line(line)
+                if fmt_block is not None:
+                    # Flush any accumulated content lines as a callout first
+                    if content_lines:
+                        content_text = "\n".join(content_lines)
+                        blocks.extend(build_blocks_for_type(args.type, content_text))
+                        content_lines = []
+                    blocks.append(fmt_block)
+                else:
+                    content_lines.append(line)
+
+            # Remaining content lines
+            if content_lines:
+                blocks.extend(build_blocks_for_type(args.type, "\n".join(content_lines)))
 
     if not blocks:
         print("OK|没有内容可记录")
