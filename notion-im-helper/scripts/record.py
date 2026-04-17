@@ -360,12 +360,55 @@ def build_blocks_for_type(record_type, content):
         lines = clean_text.split("\n")
         paragraphs = [line for line in lines if line.strip()]  # skip blank lines
 
-        # Timestamp in callout rich_text, content in children paragraphs
-        # This ensures time and content are on separate lines
-        children = [build_paragraph(p) for p in paragraphs]
-        if meta_line:
-            children.append(build_paragraph(meta_line))
-        return [build_callout(cfg["emoji"], now_str, cfg["color"], children=children)]
+        # Auto-split long content into multiple callouts
+        # Threshold: ~2000 chars per callout (covers most entries in one block)
+        # Very long entries (3-4k+) will be split into 2-3 callouts
+        CALLOUT_CHAR_LIMIT = 2000
+        total_len = sum(len(p) for p in paragraphs)
+
+        if total_len <= CALLOUT_CHAR_LIMIT:
+            # Short content: single callout
+            children = [build_paragraph(p) for p in paragraphs]
+            if meta_line:
+                children.append(build_paragraph(meta_line))
+            return [build_callout(cfg["emoji"], now_str, cfg["color"], children=children)]
+        else:
+            # Long content: split into multiple callouts by paragraph boundaries
+            callout_blocks = []
+            current_paras = []
+            current_len = 0
+
+            for p in paragraphs:
+                # If adding this paragraph exceeds limit AND we already have content,
+                # flush current batch as a callout
+                if current_len + len(p) > CALLOUT_CHAR_LIMIT and current_paras:
+                    children = [build_paragraph(cp) for cp in current_paras]
+                    callout_blocks.append(
+                        build_callout(cfg["emoji"], now_str, cfg["color"], children=children)
+                    )
+                    current_paras = []
+                    current_len = 0
+
+                current_paras.append(p)
+                current_len += len(p)
+
+            # Flush remaining paragraphs
+            if current_paras:
+                children = [build_paragraph(cp) for cp in current_paras]
+                if meta_line:
+                    children.append(build_paragraph(meta_line))
+                callout_blocks.append(
+                    build_callout(cfg["emoji"], now_str, cfg["color"], children=children)
+                )
+            # Add metadata to the last callout if not already added
+            if meta_line and not callout_blocks:
+                # Edge case: no content but metadata
+                callout_blocks.append(
+                    build_callout(cfg["emoji"], now_str, cfg["color"],
+                                  children=[build_paragraph(meta_line)])
+                )
+
+            return callout_blocks
 
     return []
 
