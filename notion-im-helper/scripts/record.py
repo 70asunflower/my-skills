@@ -471,15 +471,25 @@ def cmd_record(args):
     if has_pending_image:
         file_id = upload_file(PENDING_IMAGE_FILE)
         if file_id:
-            # Image block with caption (like link's bookmark + caption style)
-            caption = full_content if full_content else None
-            blocks.append(build_image_block(file_id, caption=caption))
+            # Short comment (≤100 chars): use as image caption only
+            # Long content: use first line as caption, then create callout for full content
+            CAPTION_CHAR_LIMIT = 100
+            if full_content and len(full_content) > CAPTION_CHAR_LIMIT:
+                # Long content: first line as caption, rest as callout
+                first_line = full_content.split("\n")[0].strip()
+                caption = first_line[:CAPTION_CHAR_LIMIT] if first_line else None
+                blocks.append(build_image_block(file_id, caption=caption))
+                # Also generate callout for the full content below
+            else:
+                # Short comment: caption only, no callout
+                caption = full_content if full_content else None
+                blocks.append(build_image_block(file_id, caption=caption))
             os.remove(PENDING_IMAGE_FILE)  # Clean up
         else:
             print("ERROR| 图片上传失败")
             return
 
-    if not has_pending_image:
+    if not has_pending_image or (has_pending_image and full_content and len(full_content) > 100):
         # For callout-wrapped types (idea/diary/note/question/quote),
         # skip format-line parsing to keep content intact inside one callout.
         # Other types (link/image/todo/done) don't have this issue.
