@@ -104,3 +104,32 @@ Always run `check_config.py` first on first use. Never modify or delete existing
 - Optional `--caption` flag to add caption text to the image
 - Max file size: 5MB (Notion API limit)
 - Supported formats: jpg, jpeg, png, gif, webp, bmp, svg
+
+## Image + Text Sync Rules
+
+When user sends **both image and text** in one message:
+
+1. **Short comment (≤100 chars)**: Image block with comment as caption. No callout.
+2. **Long content (>100 chars)**: Image block with first line (≤100 chars) as caption, PLUS a separate callout for the full content.
+
+**Implementation**: Copy image to `.pending_image.jpg`, write text to `.pending_content.txt`, then run `record.py record --type {type}`. The code auto-detects `.pending_image.jpg` and handles the split.
+
+**IMPORTANT**: When user sends **image only** (no text or just "同步到notion"), upload the image as-is using `record.py image`. Do NOT transcribe/OCR the image content into a callout — the user wants the original image, not a text copy.
+
+## Long Content Auto-Split
+
+- **≤2000 chars**: Single callout (most entries)
+- **>2000 chars**: Auto-split into multiple callouts at paragraph boundaries (e.g., 3-4k chars → 2-3 callouts)
+- Metadata (tags/projects) only added to the last callout
+- AI should write the **entire content** to `.pending_content.txt` at once — do NOT manually split into multiple calls
+
+## Best Practices for AI Callers
+
+- **Content passing**: Always use `.pending_content.txt` (write file → run script). Never pass content via command-line args (PowerShell `$` expansion issues).
+- **Image passing**: Copy to `.pending_image.jpg`, the script auto-detects and cleans up.
+- **Type inference**: If user says "notion" or "同步" without specifying type, infer from content:
+  - Contains "日记"/"今天" → diary
+  - Contains URL → link
+  - Image only → image (use `record.py image`)
+  - Default → idea
+- **Undo**: Use `record.py undo` — respects 5-min batch window, deletes all blocks from last batch.
