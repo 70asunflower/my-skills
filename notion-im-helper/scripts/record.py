@@ -342,6 +342,14 @@ def build_blocks_for_type(record_type, content):
         return [build_image_block_external(path)]
 
     if record_type in ("idea", "diary", "note", "question", "quote"):
+        # Check for LLM comment separator
+        LLM_COMMENT_SEP = "---LLM_COMMENT---"
+        llm_comment = None
+        if LLM_COMMENT_SEP in content:
+            parts = content.split(LLM_COMMENT_SEP, 1)
+            content = parts[0].strip()
+            llm_comment = parts[1].strip()
+
         clean_text, tags, project = parse_metadata(content)
 
         # Header line: YYYY-MM-DD HH:mm
@@ -371,6 +379,12 @@ def build_blocks_for_type(record_type, content):
             children = [build_paragraph(p) for p in paragraphs]
             if meta_line:
                 children.append(build_paragraph(meta_line))
+            # Append LLM comment if present
+            if llm_comment:
+                children.append(build_paragraph("— 🤖 LLM 点评 —"))
+                for lp in llm_comment.split("\n"):
+                    if lp.strip():
+                        children.append(build_paragraph(lp.strip()))
             return [build_callout(cfg["emoji"], now_str, cfg["color"], children=children)]
         else:
             # Long content: split into multiple callouts by paragraph boundaries
@@ -397,6 +411,12 @@ def build_blocks_for_type(record_type, content):
                 children = [build_paragraph(cp) for cp in current_paras]
                 if meta_line:
                     children.append(build_paragraph(meta_line))
+                # Append LLM comment to the last callout
+                if llm_comment:
+                    children.append(build_paragraph("— 🤖 LLM 点评 —"))
+                    for lp in llm_comment.split("\n"):
+                        if lp.strip():
+                            children.append(build_paragraph(lp.strip()))
                 callout_blocks.append(
                     build_callout(cfg["emoji"], now_str, cfg["color"], children=children)
                 )

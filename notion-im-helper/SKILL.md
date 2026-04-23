@@ -123,6 +123,26 @@ When user sends **both image and text** in one message:
 - Metadata (tags/projects) only added to the last callout
 - AI should write the **entire content** to `.pending_content.txt` at once — do NOT manually split into multiple calls
 
+## LLM Comment (🤖 点评)
+
+When the AI has a comment/reflection on the user's content, append it after `---LLM_COMMENT---` separator in `.pending_content.txt`.
+
+**Format**:
+```
+用户原文内容
+---LLM_COMMENT---
+LLM 的点评/评价内容
+```
+
+**Rendering**: The LLM comment is appended at the end of the callout's children, with:
+- A gray separator line: `— 🤖 LLM 点评 —`
+- Comment paragraphs in gray color (visually distinct from user content)
+
+**When to use**:
+- When the AI provides meaningful insight, encouragement, or observation about the user's diary/idea
+- When the user explicitly asks to also sync the AI's response
+- Do NOT add LLM comments for simple confirmations or formatting-only responses
+
 ## Best Practices for AI Callers
 
 - **Content passing**: Always use `.pending_content.txt` (write file → run script). Never pass content via command-line args (PowerShell `$` expansion issues).
