@@ -58,6 +58,14 @@ Check the user message against these patterns:
 - If line contains `[ ]` or `【 】` → todo
 - Otherwise → idea
 
+### Caption Separator (for image+text or link+text messages)
+- `caption:` / `说明:` keyword splits the message into two parts:
+  - **Before `caption:`** → diary/idea/note content (synced as callout)
+  - **After `caption:`** → image/link caption (added to last image or bookmark)
+- For multiple images: caption goes on the **last** image only (via `--caption` flag)
+- For links: caption goes on the bookmark card
+- If no `caption:` keyword: all text is diary/idea content, no caption on images
+
 ## Multi-Line Processing
 
 If the user sends a multi-line message:

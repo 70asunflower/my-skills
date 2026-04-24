@@ -71,6 +71,13 @@ python scripts/summary.py {monthly|quote}
 - Contains `[ ]` or `【 】` → todo
 - Default → idea
 
+**Caption separator** (for image + text or link + text messages):
+- `caption:` / `说明:` — text after this keyword is the image/link caption, NOT diary content
+- For multiple images, caption goes on the **last** image only
+- For links, caption goes on the bookmark card
+- Everything before `caption:` is diary/idea/note content (synced as callout)
+- If no `caption:` keyword, all text is diary/idea content, no caption on images
+
 ## Metadata
 
 Scan the LAST line for metadata:
@@ -109,12 +116,27 @@ Always run `check_config.py` first on first use. Never modify or delete existing
 
 When user sends **both image and text** in one message:
 
-1. **Short comment (≤100 chars)**: Image block with comment as caption. No callout.
-2. **Long content (>100 chars)**: Image block with first line (≤100 chars) as caption, PLUS a separate callout for the full content.
+1. Parse text: split by `caption:` / `说明:` keyword (if present)
+   - **Before `caption:`** → diary/idea/note content (synced as callout)
+   - **After `caption:`** → image caption (added to last image via `--caption`)
+2. Upload images: first N-1 images without caption, **last image with `--caption`**
+3. Sync text: write diary/idea content to `.pending_content.txt`, then `record.py record --type {type}`
 
-**Implementation**: Copy image to `.pending_image.jpg`, write text to `.pending_content.txt`, then run `record.py record --type {type}`. The code auto-detects `.pending_image.jpg` and handles the split.
+**Examples**:
+- `OPPO园区很好 caption: 园区环境` + 3 images → last image gets caption "园区环境", diary "OPPO园区很好" synced separately
+- `这张图有意思` + 1 image → no caption keyword, so no caption on image, "这张图有意思" synced as idea
+- 2 images only → just upload both, no caption, no callout
 
-**IMPORTANT**: When user sends **image only** (no text or just "同步到notion"), upload the image as-is using `record.py image`. Do NOT transcribe/OCR the image content into a callout — the user wants the original image, not a text copy.
+**IMPORTANT**:
+- Image and text are always **separate operations** — image via `record.py image`, text via `record.py record`
+- Do NOT put image and text in the same command
+- When user sends **image only** (no text or just "同步到notion"), upload the image as-is using `record.py image`. Do NOT transcribe/OCR the image content into a callout
+
+## Link + Caption
+
+Same `caption:` pattern works for links:
+- `链接: https://example.com caption: 好文章` → bookmark with caption "好文章"
+- Without `caption:`, just a plain bookmark card (Notion auto-fetches title)
 
 ## Long Content Auto-Split
 
@@ -122,26 +144,6 @@ When user sends **both image and text** in one message:
 - **>2000 chars**: Auto-split into multiple callouts at paragraph boundaries (e.g., 3-4k chars → 2-3 callouts)
 - Metadata (tags/projects) only added to the last callout
 - AI should write the **entire content** to `.pending_content.txt` at once — do NOT manually split into multiple calls
-
-## LLM Comment (🤖 点评)
-
-When the AI has a comment/reflection on the user's content, append it after `---LLM_COMMENT---` separator in `.pending_content.txt`.
-
-**Format**:
-```
-用户原文内容
----LLM_COMMENT---
-LLM 的点评/评价内容
-```
-
-**Rendering**: The LLM comment is appended at the end of the callout's children, with:
-- A gray separator line: `— 🤖 LLM 点评 —`
-- Comment paragraphs in gray color (visually distinct from user content)
-
-**When to use**:
-- When the AI provides meaningful insight, encouragement, or observation about the user's diary/idea
-- When the user explicitly asks to also sync the AI's response
-- Do NOT add LLM comments for simple confirmations or formatting-only responses
 
 ## Best Practices for AI Callers
 

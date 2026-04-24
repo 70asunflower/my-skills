@@ -342,14 +342,6 @@ def build_blocks_for_type(record_type, content):
         return [build_image_block_external(path)]
 
     if record_type in ("idea", "diary", "note", "question", "quote"):
-        # Check for LLM comment separator
-        LLM_COMMENT_SEP = "---LLM_COMMENT---"
-        llm_comment = None
-        if LLM_COMMENT_SEP in content:
-            parts = content.split(LLM_COMMENT_SEP, 1)
-            content = parts[0].strip()
-            llm_comment = parts[1].strip()
-
         clean_text, tags, project = parse_metadata(content)
 
         # Header line: YYYY-MM-DD HH:mm
@@ -379,12 +371,6 @@ def build_blocks_for_type(record_type, content):
             children = [build_paragraph(p) for p in paragraphs]
             if meta_line:
                 children.append(build_paragraph(meta_line))
-            # Append LLM comment if present
-            if llm_comment:
-                children.append(build_paragraph("— 🤖 LLM 点评 —"))
-                for lp in llm_comment.split("\n"):
-                    if lp.strip():
-                        children.append(build_paragraph(lp.strip()))
             return [build_callout(cfg["emoji"], now_str, cfg["color"], children=children)]
         else:
             # Long content: split into multiple callouts by paragraph boundaries
@@ -411,12 +397,6 @@ def build_blocks_for_type(record_type, content):
                 children = [build_paragraph(cp) for cp in current_paras]
                 if meta_line:
                     children.append(build_paragraph(meta_line))
-                # Append LLM comment to the last callout
-                if llm_comment:
-                    children.append(build_paragraph("— 🤖 LLM 点评 —"))
-                    for lp in llm_comment.split("\n"):
-                        if lp.strip():
-                            children.append(build_paragraph(lp.strip()))
                 callout_blocks.append(
                     build_callout(cfg["emoji"], now_str, cfg["color"], children=children)
                 )
@@ -486,57 +466,30 @@ def cmd_record(args):
     if check_need_day_separator():
         blocks.append(build_divider())
 
-    # Check for pending image file — if present, image block + caption (like link style)
-    has_pending_image = os.path.exists(PENDING_IMAGE_FILE)
-    if has_pending_image:
-        file_id = upload_file(PENDING_IMAGE_FILE)
-        if file_id:
-            # Short comment (≤100 chars): use as image caption only
-            # Long content: use first line as caption, then create callout for full content
-            CAPTION_CHAR_LIMIT = 100
-            if full_content and len(full_content) > CAPTION_CHAR_LIMIT:
-                # Long content: first line as caption, rest as callout
-                first_line = full_content.split("\n")[0].strip()
-                caption = first_line[:CAPTION_CHAR_LIMIT] if first_line else None
-                blocks.append(build_image_block(file_id, caption=caption))
-                # Also generate callout for the full content below
+    callout_types = {"idea", "diary", "note", "question", "quote"}
+
+    if args.type in callout_types:
+        # Pass entire content directly — no format-line splitting
+        blocks.extend(build_blocks_for_type(args.type, full_content))
+    else:
+        # Multi-line: check each line for format patterns first
+        lines = full_content.split("\n")
+        content_lines = []
+        for line in lines:
+            fmt_block = parse_format_line(line)
+            if fmt_block is not None:
+                # Flush any accumulated content lines as a callout first
+                if content_lines:
+                    content_text = "\n".join(content_lines)
+                    blocks.extend(build_blocks_for_type(args.type, content_text))
+                    content_lines = []
+                blocks.append(fmt_block)
             else:
-                # Short comment: caption only, no callout
-                caption = full_content if full_content else None
-                blocks.append(build_image_block(file_id, caption=caption))
-            os.remove(PENDING_IMAGE_FILE)  # Clean up
-        else:
-            print("ERROR| 图片上传失败")
-            return
+                content_lines.append(line)
 
-    if not has_pending_image or (has_pending_image and full_content and len(full_content) > 100):
-        # For callout-wrapped types (idea/diary/note/question/quote),
-        # skip format-line parsing to keep content intact inside one callout.
-        # Other types (link/image/todo/done) don't have this issue.
-        callout_types = {"idea", "diary", "note", "question", "quote"}
-
-        if args.type in callout_types:
-            # Pass entire content directly — no format-line splitting
-            blocks.extend(build_blocks_for_type(args.type, full_content))
-        else:
-            # Multi-line: check each line for format patterns first
-            lines = full_content.split("\n")
-            content_lines = []
-            for line in lines:
-                fmt_block = parse_format_line(line)
-                if fmt_block is not None:
-                    # Flush any accumulated content lines as a callout first
-                    if content_lines:
-                        content_text = "\n".join(content_lines)
-                        blocks.extend(build_blocks_for_type(args.type, content_text))
-                        content_lines = []
-                    blocks.append(fmt_block)
-                else:
-                    content_lines.append(line)
-
-            # Remaining content lines
-            if content_lines:
-                blocks.extend(build_blocks_for_type(args.type, "\n".join(content_lines)))
+        # Remaining content lines
+        if content_lines:
+            blocks.extend(build_blocks_for_type(args.type, "\n".join(content_lines)))
 
     if not blocks:
         print("OK|没有内容可记录")
@@ -612,6 +565,13 @@ def cmd_image(args):
 
     if blocks:
         append_blocks(blocks, silent=True)
+        # Clean up pending image file if it was the source
+        src_path = os.path.abspath(path)
+        if os.path.abspath(PENDING_IMAGE_FILE) == src_path:
+            try:
+                os.remove(PENDING_IMAGE_FILE)
+            except OSError:
+                pass
         print("OK|已记录图片到 Notion ✅")
 
 
