@@ -30,6 +30,7 @@ python scripts/record.py divider
 python scripts/record.py list --kind {bullet|number} "{items}"
 python scripts/record.py toggle "{json}"
 python scripts/record.py image [--caption "text"] "{file_path_or_url}"
+python scripts/record.py caption "{content_to_append}"
 python scripts/record.py undo
 python scripts/check_config.py
 python scripts/summary.py {monthly|quote}
@@ -47,6 +48,7 @@ python scripts/summary.py {monthly|quote}
 - `摘抄:` / `quote:` / `qu:` / `z` → quote
 - `链接:` / `link:` / `url:` / `l` → link
 - `图片:` / `photo:` / `img:` / `p` → image
+- `caption:` / `说明:` / `补:` → caption (append to last entry)
 
 **Formats:**
 - `* text` → H1 heading
@@ -71,12 +73,29 @@ python scripts/summary.py {monthly|quote}
 - Contains `[ ]` or `【 】` → todo
 - Default → idea
 
-**Caption separator** (for image + text or link + text messages):
-- `caption:` / `说明:` — text after this keyword is the image/link caption, NOT diary content
-- For multiple images, caption goes on the **last** image only
-- For links, caption goes on the bookmark card
-- Everything before `caption:` is diary/idea/note content (synced as callout)
-- If no `caption:` keyword, all text is diary/idea content, no caption on images
+**Caption — two distinct uses:**
+
+`caption:` / `说明:` / `补:` has **two different behaviors** depending on context:
+
+### 1. Caption Append (standalone — no image/link in message)
+
+When the user sends `caption:` as the **primary prefix** of a message with **no images or links**, it appends the content to the **last callout** on the Notion page:
+
+- `caption: 补充一个角度` → appends "↳ 补充一个角度" as a child paragraph inside the last callout
+- `说明: 这个想法还有一个延伸` → same behavior
+- `补: 对了还有一点` → same behavior
+
+**Implementation**: Write content to `.pending_content.txt`, then run `python scripts/record.py caption`.
+
+**Visual**: The appended paragraph is prefixed with `↳` to distinguish it from the original content.
+
+### 2. Caption Separator (with image/link in message)
+
+When the message **contains images or links**, `caption:` acts as a **separator** between diary content and image/link caption:
+- `OPPO园区很好 caption: 园区环境` + 3 images → last image gets caption "园区环境", diary "OPPO园区很好" synced separately
+- Without `caption:`, all text is diary/idea content, no caption on images
+
+**IMPORTANT**: The AI must check whether the message contains images or links to determine which caption behavior to use.
 
 ## Metadata
 
@@ -116,7 +135,7 @@ Always run `check_config.py` first on first use. Never modify or delete existing
 
 When user sends **both image and text** in one message:
 
-1. Parse text: split by `caption:` / `说明:` keyword (if present)
+1. Parse text: split by `caption:` / `说明:` keyword (if present) — this is the **Caption Separator** mode
    - **Before `caption:`** → diary/idea/note content (synced as callout)
    - **After `caption:`** → image caption (added to last image via `--caption`)
 2. Upload images: first N-1 images without caption, **last image with `--caption`**
@@ -150,6 +169,7 @@ Same `caption:` pattern works for links:
 - **Content passing**: Always use `.pending_content.txt` (write file → run script). Never pass content via command-line args (PowerShell `$` expansion issues).
 - **Image passing**: Copy to `.pending_image.jpg`, the script auto-detects and cleans up.
 - **Type inference**: If user says "notion" or "同步" without specifying type, infer from content:
+  - Starts with `caption:` / `说明:` / `补:` → caption (append to last entry)
   - Contains "日记"/"今天" → diary
   - Contains URL → link
   - Image only → image (use `record.py image`)

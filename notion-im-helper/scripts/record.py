@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 
 sys.stdout.reconfigure(encoding='utf-8')
 sys.path.insert(0, os.path.dirname(__file__))
-from notion_client import api_request, append_blocks, PAGE_ID, get_children, delete_last_block, upload_file
+from notion_client import api_request, append_blocks, append_to_block, PAGE_ID, get_children, get_last_callout_block, delete_last_block, upload_file
 
 
 # ---- Rich text helpers ----
@@ -575,6 +575,48 @@ def cmd_image(args):
         print("OK|已记录图片到 Notion ✅")
 
 
+def cmd_caption(args):
+    """Append content to the last callout block on the page."""
+    # Read content
+    if args.file_path:
+        with open(args.file_path, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+    elif args.stdin_content:
+        content = sys.stdin.read().strip()
+    elif args.content:
+        content = " ".join(args.content).strip()
+    elif os.path.exists(PENDING_CONTENT_FILE):
+        with open(PENDING_CONTENT_FILE, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+        os.remove(PENDING_CONTENT_FILE)
+    else:
+        content = ""
+
+    if not content:
+        print("OK|没有内容可追加")
+        return
+
+    # Find the last callout block
+    last_callout = get_last_callout_block()
+    if not last_callout:
+        print("ERROR| Notion 页面上没有记录，无法追加")
+        return
+
+    block_id = last_callout["id"]
+
+    # Build paragraph children — prefix with ↳ to show it's a follow-up
+    paragraphs = [p.strip() for p in content.split("\n") if p.strip()]
+    children = []
+    for i, p in enumerate(paragraphs):
+        if i == 0:
+            children.append(build_paragraph(f"↳ {p}"))
+        else:
+            children.append(build_paragraph(p))
+
+    append_to_block(block_id, children, silent=True)
+    print("OK|已追加到上一条记录 ✅")
+
+
 def cmd_undo(_args):
     delete_last_block()
 
@@ -619,6 +661,15 @@ def main():
     p.add_argument("--caption", default=None, help="Optional caption for the image")
     p.add_argument("path", nargs="+", help="Local file path or URL of the image")
     p.set_defaults(func=cmd_image)
+
+    # caption command — append to last callout
+    p = sub.add_parser("caption")
+    p.add_argument("--stdin-content", action="store_true", dest="stdin_content",
+                   help="Read content from stdin")
+    p.add_argument("--file", dest="file_path", default=None,
+                   help="Read content from file")
+    p.add_argument("content", nargs="*", help="Content to append")
+    p.set_defaults(func=cmd_caption)
 
     # undo command
     p = sub.add_parser("undo")

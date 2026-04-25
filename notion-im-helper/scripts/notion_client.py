@@ -251,6 +251,40 @@ def upload_file(file_path):
         return None
 
 
+def get_last_callout_block():
+    """Find the last callout block on the page by paginating through all children."""
+    cursor = None
+    last_callout = None
+    while True:
+        params = "page_size=100"
+        if cursor:
+            params += f"&start_cursor={cursor}"
+        data = api_request("GET", f"blocks/{PAGE_ID}/children?{params}")
+        if data.get("error") or "results" not in data or not data["results"]:
+            break
+        for block in data["results"]:
+            if block.get("type") == "callout":
+                last_callout = block
+        if data.get("has_more") and data.get("next_cursor"):
+            cursor = data["next_cursor"]
+        else:
+            break
+    return last_callout
+
+
+def append_to_block(block_id, children, silent=False):
+    """Append children to a specific block (not the page)."""
+    if not children:
+        print("OK|没有内容可追加")
+        return
+    result = api_request("PATCH", f"blocks/{block_id}/children", {"children": children})
+    if result.get("error"):
+        _emit_error(result)
+        return
+    if not silent:
+        print(f"OK|已追加到 Notion，共 {len(children)} 段")
+
+
 def _emit_error(result):
     """Emit a friendly error message based on the error code."""
     msg = result.get("message", "")

@@ -22,6 +22,7 @@ Check the user message against these patterns:
 - `摘抄:` or starts with `quote:` or starts with `qu:` → `quote`
 - starts with `链接:` or `link:` or `url:` → `link`
 - `图片:` or `photo:` or `img:` → `image`
+- `caption:` or `说明:` or `补:` → `caption` (append to last callout, standalone use — see below)
 
 ### Shortcut Keys (single letter prefix followed by space)
 - `d ` at start → `diary`
@@ -58,13 +59,22 @@ Check the user message against these patterns:
 - If line contains `[ ]` or `【 】` → todo
 - Otherwise → idea
 
-### Caption Separator (for image+text or link+text messages)
+### Caption — Two Distinct Uses
+
+**1. Caption Append (standalone, no image/link in message)**:
+- `caption: 补充内容` or `说明: 补充内容` or `补: 补充内容` → append to the last callout on Notion
+- Write content to `.pending_content.txt`, then run `python scripts/record.py caption`
+- The script finds the last callout and appends a `↳ 补充内容` paragraph as a child
+
+**2. Caption Separator (with image/link in message)**:
 - `caption:` / `说明:` keyword splits the message into two parts:
   - **Before `caption:`** → diary/idea/note content (synced as callout)
   - **After `caption:`** → image/link caption (added to last image or bookmark)
 - For multiple images: caption goes on the **last** image only (via `--caption` flag)
 - For links: caption goes on the bookmark card
 - If no `caption:` keyword: all text is diary/idea content, no caption on images
+
+**IMPORTANT**: Check whether the message contains images or links to determine which caption behavior to use.
 
 ## Multi-Line Processing
 
