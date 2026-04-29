@@ -13,8 +13,29 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BATCH_FILE = os.path.join(SCRIPT_DIR, ".pending_batch.json")
 BATCH_TTL_SECONDS = 300  # 5 minutes
 
-API_KEY = os.environ.get("NOTION_API_KEY", "")
-PAGE_ID = os.environ.get("NOTION_PARENT_PAGE_ID", "")
+def _get_env(name):
+    """Get env var, falling back to Windows user-level registry on Windows."""
+    val = os.environ.get(name, "")
+    if val:
+        return val
+    if sys.platform == "win32":
+        try:
+            import winreg
+            key = winreg.OpenKey(
+                winreg.HKEY_CURRENT_USER,
+                r"Environment",
+                0,
+                winreg.KEY_READ,
+            )
+            val, _ = winreg.QueryValueEx(key, name)
+            winreg.CloseKey(key)
+            return val or ""
+        except Exception:
+            pass
+    return ""
+
+API_KEY = _get_env("NOTION_API_KEY")
+PAGE_ID = _get_env("NOTION_PARENT_PAGE_ID")
 BASE_URL = "https://api.notion.com/v1"
 
 HEADERS_TEMPLATE = {
