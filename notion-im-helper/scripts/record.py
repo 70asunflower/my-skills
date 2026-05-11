@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 
 sys.stdout.reconfigure(encoding='utf-8')
 sys.path.insert(0, os.path.dirname(__file__))
-from notion_client import api_request, append_blocks, append_to_block, PAGE_ID, get_children, get_last_callout_block, delete_last_block, upload_file
+from notion_client import api_request, append_blocks, append_to_block, update_block_caption, PAGE_ID, get_children, get_last_callout_block, delete_last_block, upload_file
 
 
 # ---- Rich text helpers ----
@@ -576,7 +576,7 @@ def cmd_image(args):
 
 
 def cmd_caption(args):
-    """Append content to the last callout block on the page."""
+    """Update the caption field of the last callout block on the page."""
     # Read content
     if args.file_path:
         with open(args.file_path, "r", encoding="utf-8") as f:
@@ -603,17 +603,10 @@ def cmd_caption(args):
         return
 
     block_id = last_callout["id"]
+    block_type = last_callout.get("type", "callout")
 
-    # Build paragraph children — prefix with ↳ to show it's a follow-up
-    paragraphs = [p.strip() for p in content.split("\n") if p.strip()]
-    children = []
-    for i, p in enumerate(paragraphs):
-        if i == 0:
-            children.append(build_paragraph(f"↳ {p}"))
-        else:
-            children.append(build_paragraph(p))
-
-    append_to_block(block_id, children, silent=True)
+    # Update the callout's caption field
+    update_block_caption(block_id, block_type, content, silent=True)
     print("OK|已追加到上一条记录 ✅")
 
 

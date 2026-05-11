@@ -306,6 +306,25 @@ def append_to_block(block_id, children, silent=False):
         print(f"OK|已追加到 Notion，共 {len(children)} 段")
 
 
+def update_block_caption(block_id, block_type, caption_text, silent=False):
+    """Update the caption field of a block (callout, image, bookmark, etc.).
+
+    Uses the Notion API PATCH /v1/blocks/{block_id} to set the caption rich_text.
+    """
+    from record import split_rich_text
+    body = {
+        block_type: {
+            "caption": split_rich_text(caption_text)
+        }
+    }
+    result = api_request("PATCH", f"blocks/{block_id}", body)
+    if result.get("error"):
+        _emit_error(result)
+        return
+    if not silent:
+        print(f"OK|已更新 caption")
+
+
 def _emit_error(result):
     """Emit a friendly error message based on the error code."""
     msg = result.get("message", "")
