@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 
 sys.stdout.reconfigure(encoding='utf-8')
 sys.path.insert(0, os.path.dirname(__file__))
-from notion_client import api_request, append_blocks, append_to_block, update_block_caption, PAGE_ID, get_children, get_last_callout_block, delete_last_block, upload_file
+from notion_client import api_request, append_blocks, append_to_block, PAGE_ID, get_children, get_last_callout_block, delete_last_block, upload_file
 
 
 # ---- Rich text helpers ----
@@ -32,14 +32,14 @@ def split_rich_text(text, chunk_size=RICH_TEXT_CHUNK_SIZE):
 
 # ---- Block builders ----
 
-def build_paragraph(text):
+def build_paragraph(text, color="default"):
     """Build a paragraph block with rich_text."""
     return {
         "object": "block",
         "type": "paragraph",
         "paragraph": {
             "rich_text": split_rich_text(text),
-            "color": "default",
+            "color": color,
         },
     }
 
@@ -576,7 +576,7 @@ def cmd_image(args):
 
 
 def cmd_caption(args):
-    """Update the caption field of the last callout block on the page."""
+    """Append caption content as gray paragraphs inside the last callout block."""
     # Read content
     if args.file_path:
         with open(args.file_path, "r", encoding="utf-8") as f:
@@ -603,10 +603,12 @@ def cmd_caption(args):
         return
 
     block_id = last_callout["id"]
-    block_type = last_callout.get("type", "callout")
 
-    # Update the callout's caption field
-    update_block_caption(block_id, block_type, content, silent=True)
+    # Build gray paragraph children
+    paragraphs = [p.strip() for p in content.split("\n") if p.strip()]
+    children = [build_paragraph(p, color="gray") for p in paragraphs]
+
+    append_to_block(block_id, children, silent=True)
     print("OK|已追加到上一条记录 ✅")
 
 
