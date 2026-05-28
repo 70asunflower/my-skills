@@ -25,6 +25,7 @@ When the user sends a message matching a trigger pattern, execute the correspond
 
 ```bash
 python scripts/record.py record --type {type} "{content}"
+python scripts/record.py record --type {type} --file {file_path}
 python scripts/record.py heading --level {1|2|3} "{text}"
 python scripts/record.py divider
 python scripts/record.py list --kind {bullet|number} "{items}"
@@ -33,6 +34,7 @@ python scripts/record.py image [--caption "text"] "{file_path_or_url}"
 python scripts/record.py caption "{content_to_append}"
 python scripts/record.py undo
 python scripts/check_config.py
+python scripts/search_notes.py "{keyword}"
 python scripts/summary.py {monthly|quote}
 ```
 
@@ -79,15 +81,15 @@ python scripts/summary.py {monthly|quote}
 
 ### 1. Caption Append (standalone — no image/link in message)
 
-When the user sends `caption:` as the **primary prefix** of a message with **no images or links**, it appends the content to the **last callout** on the Notion page:
+When the user sends `caption:` as the **primary prefix** of a message with **no images or links**, it appends gray-colored paragraphs inside the last callout block:
 
-- `caption: 补充一个角度` → appends "↳ 补充一个角度" as a child paragraph inside the last callout
+- `caption: 补充一个角度` → appends "补充一个角度" as a gray paragraph inside the last callout
 - `说明: 这个想法还有一个延伸` → same behavior
 - `补: 对了还有一点` → same behavior
 
 **Implementation**: Write content to `.pending_content.txt`, then run `python scripts/record.py caption`.
 
-**Visual**: The appended paragraph is prefixed with `↳` to distinguish it from the original content.
+**Visual**: Gray-colored paragraphs inside the callout, visually distinct from the main content. No `↳` prefix.
 
 ### 2. Caption Separator (with image/link in message)
 
@@ -150,12 +152,15 @@ When user sends **both image and text** in one message:
 - Image and text are always **separate operations** — image via `record.py image`, text via `record.py record`
 - Do NOT put image and text in the same command
 - When user sends **image only** (no text or just "同步到notion"), upload the image as-is using `record.py image`. Do NOT transcribe/OCR the image content into a callout
+- **CRITICAL — No double sync**: When message starts with `caption:` and has an image, the text after `caption:` goes ONLY as image caption (via `--caption`). Do NOT also create a diary/note callout with the same text. If `caption:` is the FIRST keyword (no text before it), the entire content is caption-only — zero callout blocks.
 
 ## Link + Caption
 
 Same `caption:` pattern works for links:
 - `链接: https://example.com caption: 好文章` → bookmark with caption "好文章"
 - Without `caption:`, just a plain bookmark card (Notion auto-fetches title)
+
+**Implementation for link + caption**: Write **URL + caption text together** to `.pending_content.txt`, then run `record.py record --type link`. The code auto-extracts URLs and uses remaining text as bookmark caption. Do NOT sync link and caption separately — `cmd_caption` only appends to callout blocks, not bookmark blocks.
 
 ## Long Content Auto-Split
 
@@ -167,7 +172,8 @@ Same `caption:` pattern works for links:
 ## Best Practices for AI Callers
 
 - **Content passing**: Always use `.pending_content.txt` (write file → run script). Never pass content via command-line args (PowerShell `$` expansion issues).
-- **Image passing**: Copy to `.pending_image.jpg`, the script auto-detects and cleans up.
+  - **⚠️ CRITICAL — File path**: Write to `C:\Users\Nesp\.workbuddy\skills\notion-im-helper\scripts\.pending_content.txt` (the scripts directory, NOT the workspace directory). The script reads from its own directory, so writing to the workspace root will result in empty content.
+- **Image passing**: Pass image file path or URL directly as command-line argument to `record.py image`. Do NOT copy to `.pending_image.jpg` — that file is only used internally for cleanup.
 - **Type inference**: If user says "notion" or "同步" without specifying type, infer from content:
   - Starts with `caption:` / `说明:` / `补:` → caption (append to last entry)
   - Contains "日记"/"今天" → diary

@@ -8,7 +8,11 @@ import urllib.error
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-API_KEY = os.environ.get("NOTION_API_KEY", "")
+sys.path.insert(0, os.path.dirname(__file__))
+from notion_client import API_KEY, _get_env
+
+# Re-read using the same Windows-registry-aware helper
+API_KEY = _get_env("NOTION_API_KEY") or API_KEY
 BASE_URL = "https://api.notion.com/v1"
 
 
