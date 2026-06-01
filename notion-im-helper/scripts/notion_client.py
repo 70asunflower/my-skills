@@ -11,7 +11,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 # Pending batch storage
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BATCH_FILE = os.path.join(SCRIPT_DIR, ".pending_batch.json")
-PAGES_CONFIG_FILE = os.path.join(SCRIPT_DIR, "pages.json")
+PAGES_CONFIG_FILE = os.path.join(SCRIPT_DIR, "user", "pages.json")
 BATCH_TTL_SECONDS = 300  # 5 minutes
 
 def _get_env(name):
@@ -346,7 +346,7 @@ def update_block_caption(block_id, block_type, caption_text, silent=False):
 
     Uses the Notion API PATCH /v1/blocks/{block_id} to set the caption rich_text.
     """
-    from record import split_rich_text
+    from core.blocks import split_rich_text
     body = {
         block_type: {
             "caption": split_rich_text(caption_text)
