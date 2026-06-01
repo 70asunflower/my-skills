@@ -11,6 +11,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 # Pending batch storage
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BATCH_FILE = os.path.join(SCRIPT_DIR, ".pending_batch.json")
+PAGES_CONFIG_FILE = os.path.join(SCRIPT_DIR, "pages.json")
 BATCH_TTL_SECONDS = 300  # 5 minutes
 
 def _get_env(name):
@@ -37,6 +38,40 @@ def _get_env(name):
 API_KEY = _get_env("NOTION_API_KEY")
 PAGE_ID = _get_env("NOTION_PARENT_PAGE_ID")
 BASE_URL = "https://api.notion.com/v1"
+
+# Active page (can be switched via set_active_page)
+_active_page_id = PAGE_ID
+
+def load_pages_config():
+    """Load named pages from pages.json config file."""
+    if not os.path.exists(PAGES_CONFIG_FILE):
+        return {}
+    try:
+        with open(PAGES_CONFIG_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data
+    except Exception:
+        return {}
+
+def set_active_page(page_name):
+    """Set the active Notion page by name from pages.json.
+    
+    Args:
+        page_name: Name key in pages.json (e.g., 'lifeos')
+    
+    Returns:
+        The resolved page_id string.
+    """
+    global _active_page_id
+    if page_name:
+        pages = load_pages_config()
+        if page_name in pages:
+            _active_page_id = pages[page_name]["page_id"]
+            return _active_page_id
+        else:
+            print(f"WARN|未找到页面 '{page_name}'，使用默认页面")
+    _active_page_id = PAGE_ID
+    return _active_page_id
 
 HEADERS_TEMPLATE = {
     "Authorization": "",
@@ -89,7 +124,7 @@ def append_blocks(children, silent=False):
     if not children:
         print("OK|没有内容可追加")
         return
-    result = api_request("PATCH", f"blocks/{PAGE_ID}/children", {"children": children})
+    result = api_request("PATCH", f"blocks/{_active_page_id}/children", {"children": children})
     if result.get("error"):
         _emit_error(result)
         return
@@ -106,7 +141,7 @@ def append_blocks(children, silent=False):
 
 def get_children(page_id=None, start_cursor=None, page_size=100, silent=False):
     """Read page children blocks."""
-    pid = page_id or PAGE_ID
+    pid = page_id or _active_page_id
     params = f"page_size={page_size}"
     if start_cursor:
         params += f"&start_cursor={start_cursor}"
@@ -147,7 +182,7 @@ def delete_last_block():
         params = f"page_size=100"
         if cursor:
             params += f"&start_cursor={cursor}"
-        data = api_request("GET", f"blocks/{PAGE_ID}/children?{params}")
+        data = api_request("GET", f"blocks/{_active_page_id}/children?{params}")
         if data.get("error") or "results" not in data or not data["results"]:
             break
         last_block = data["results"][-1]
@@ -280,7 +315,7 @@ def get_last_callout_block():
         params = "page_size=100"
         if cursor:
             params += f"&start_cursor={cursor}"
-        data = api_request("GET", f"blocks/{PAGE_ID}/children?{params}")
+        data = api_request("GET", f"blocks/{_active_page_id}/children?{params}")
         if data.get("error") or "results" not in data or not data["results"]:
             break
         for block in data["results"]:

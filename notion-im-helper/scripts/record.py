@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 
 sys.stdout.reconfigure(encoding='utf-8')
 sys.path.insert(0, os.path.dirname(__file__))
-from notion_client import api_request, append_blocks, append_to_block, PAGE_ID, get_children, get_last_callout_block, delete_last_block, upload_file
+from notion_client import api_request, append_blocks, append_to_block, PAGE_ID, get_children, get_last_callout_block, delete_last_block, upload_file, set_active_page
 
 
 # ---- Rich text helpers ----
@@ -443,6 +443,7 @@ PENDING_IMAGE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".
 
 
 def cmd_record(args):
+    set_active_page(args.page)
     cfg = TYPE_CONFIG.get(args.type, TYPE_CONFIG["idea"])
     if args.file_path:
         # Read content from file (avoids shell encoding and variable expansion issues)
@@ -505,17 +506,20 @@ def cmd_record(args):
 
 
 def cmd_heading(args):
+    set_active_page(args.page)
     blocks = [build_heading(args.level, " ".join(args.content))]
     append_blocks(blocks, silent=True)
     print("OK|已记录到 Notion ✅")
 
 
-def cmd_divider(_args):
+def cmd_divider(args):
+    set_active_page(args.page)
     append_blocks([build_divider()], silent=True)
     print("OK|已记录到 Notion ✅")
 
 
 def cmd_list(args):
+    set_active_page(args.page)
     builder = build_bullet if args.kind == "bullet" else build_numbered
     blocks = [builder(text) for text in args.content]
     append_blocks(blocks, silent=True)
@@ -523,6 +527,7 @@ def cmd_list(args):
 
 
 def cmd_toggle(args):
+    set_active_page(args.page)
     # JSON input from stdin or args
     if args.content:
         data = json.loads(" ".join(args.content))
@@ -539,6 +544,7 @@ def cmd_toggle(args):
 
 def cmd_image(args):
     """Upload an image and append to Notion page."""
+    set_active_page(args.page)
     path = " ".join(args.path)
     blocks = []
 
@@ -577,6 +583,7 @@ def cmd_image(args):
 
 def cmd_caption(args):
     """Append caption content as gray paragraphs inside the last callout block."""
+    set_active_page(args.page)
     # Read content
     if args.file_path:
         with open(args.file_path, "r", encoding="utf-8") as f:
@@ -612,7 +619,8 @@ def cmd_caption(args):
     print("OK|已追加到上一条记录 ✅")
 
 
-def cmd_undo(_args):
+def cmd_undo(args):
+    set_active_page(args.page)
     delete_last_block()
 
 
@@ -623,6 +631,7 @@ def main():
     # record command
     p = sub.add_parser("record")
     p.add_argument("--type", required=True)
+    p.add_argument("--page", default=None, help="Target page name from pages.json (e.g., 'lifeos')")
     p.add_argument("--stdin-content", action="store_true", dest="stdin_content",
                    help="Read content from stdin instead of args (avoids shell variable expansion)")
     p.add_argument("--file", dest="file_path", default=None,
@@ -632,33 +641,39 @@ def main():
 
     # heading command
     p = sub.add_parser("heading")
+    p.add_argument("--page", default=None, help="Target page name from pages.json")
     p.add_argument("--level", type=int, default=2)
     p.add_argument("content", nargs="+")
     p.set_defaults(func=cmd_heading)
 
     # divider command
     p = sub.add_parser("divider")
+    p.add_argument("--page", default=None, help="Target page name from pages.json")
     p.set_defaults(func=cmd_divider)
 
     # list command
     p = sub.add_parser("list")
+    p.add_argument("--page", default=None, help="Target page name from pages.json")
     p.add_argument("--kind", choices=["bullet", "number"], default="bullet")
     p.add_argument("content", nargs="+")
     p.set_defaults(func=cmd_list)
 
     # toggle command
     p = sub.add_parser("toggle")
+    p.add_argument("--page", default=None, help="Target page name from pages.json")
     p.add_argument("content", nargs="*")
     p.set_defaults(func=cmd_toggle)
 
     # image command
     p = sub.add_parser("image")
+    p.add_argument("--page", default=None, help="Target page name from pages.json")
     p.add_argument("--caption", default=None, help="Optional caption for the image")
     p.add_argument("path", nargs="+", help="Local file path or URL of the image")
     p.set_defaults(func=cmd_image)
 
     # caption command — append to last callout
     p = sub.add_parser("caption")
+    p.add_argument("--page", default=None, help="Target page name from pages.json")
     p.add_argument("--stdin-content", action="store_true", dest="stdin_content",
                    help="Read content from stdin")
     p.add_argument("--file", dest="file_path", default=None,
@@ -668,6 +683,7 @@ def main():
 
     # undo command
     p = sub.add_parser("undo")
+    p.add_argument("--page", default=None, help="Target page name from pages.json")
     p.set_defaults(func=cmd_undo)
 
     args = parser.parse_args()

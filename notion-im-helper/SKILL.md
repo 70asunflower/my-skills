@@ -1,6 +1,6 @@
 ---
 name: notion-im-helper
-description: Sync IM messages to Notion via Notion API. Supports 7 content types, 4 formats, 2 metadata types. Append-only to a single Notion page.
+description: Sync IM messages to Notion via Notion API. Supports 7 content types, 4 formats, 2 metadata types, multi-page sync. Append-only.
 ---
 
 # Notion IM Helper
@@ -19,18 +19,48 @@ description: Sync IM messages to Notion via Notion API. Supports 7 content types
 2. Set env vars: `NOTION_API_KEY` and `NOTION_PARENT_PAGE_ID`
 3. Authorize integration on Notion page (··· > Connect to)
 
+## Multi-Page Support
+
+You can sync to multiple Notion pages by configuring named pages in `scripts/pages.json`:
+
+```json
+{
+  "lifeos": {
+    "page_id": "372294df130c81d4b3cae4dd797d924b",
+    "description": "8+1 Life OS"
+  },
+  "work": {
+    "page_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "description": "工作日志"
+  }
+}
+```
+
+Then use `--page <name>` in any command:
+```bash
+python scripts/record.py record --type diary --page lifeos
+python scripts/record.py image --page lifeos "image.jpg"
+python scripts/record.py undo --page lifeos
+```
+
+Without `--page`, defaults to `NOTION_PARENT_PAGE_ID`.
+
+**For AI callers**: If user says "notion lifeos 日记:" or mentions "lifeos" page, add `--page lifeos`. Otherwise omit `--page` for the default page.
+
 ## Usage
 
 When the user sends a message matching a trigger pattern, execute the corresponding script:
 
 ```bash
 python scripts/record.py record --type {type} "{content}"
+python scripts/record.py record --type {type} --page {name} "{content}"
 python scripts/record.py record --type {type} --file {file_path}
 python scripts/record.py heading --level {1|2|3} "{text}"
 python scripts/record.py divider
 python scripts/record.py list --kind {bullet|number} "{items}"
 python scripts/record.py toggle "{json}"
 python scripts/record.py image [--caption "text"] "{file_path_or_url}"
+python scripts/record.py image --page {name} [--caption "text"] "{file_path_or_url}"
 python scripts/record.py caption "{content_to_append}"
 python scripts/record.py undo
 python scripts/check_config.py
