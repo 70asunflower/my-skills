@@ -19,6 +19,24 @@ description: Sync IM messages to Notion via Notion API. Supports 7 content types
 2. Set env vars: `NOTION_API_KEY` and `NOTION_PARENT_PAGE_ID`
 3. Authorize integration on Notion page (··· > Connect to)
 
+## Directory Structure
+
+```
+scripts/
+├── core/                  # Generic, portable — no user data
+│   ├── blocks.py          # Block builders (callout, paragraph, image, etc.)
+│   ├── dispatch.py        # Content dispatch & format parsing
+│   └── __init__.py
+├── user/                  # Personalized — your config only
+│   ├── pages.json         # Named page ID mappings (e.g., "lifeos")
+│   └── README.md
+├── record.py              # Entry point (imports from core/)
+├── notion_client.py       # Notion API client
+├── check_config.py        # Config verification
+├── search_notes.py        # Keyword search
+└── summary.py             # Monthly summaries
+```
+
 ## Multi-Page Support
 
 You can sync to multiple Notion pages by configuring named pages in `scripts/pages.json`:
