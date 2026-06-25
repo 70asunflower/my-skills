@@ -96,10 +96,10 @@ abstract: "摘要内容"
 #### 3.2 公式
 
 ```markdown
-行内：$E=mc^2$     →  直接保留 $E=mc^2$
+行内：$E=mc^2$     →  直接保留 $E=mc^2$（不放入 mathbox）
 
 独立：
-$$E=mc^2$$         →  \begin{mathbox}
+$$E=mc^2$$         →  \begin{mathbox}   ← 所有独立公式必须用 mathbox 包裹
                       \[
                       E=mc^2
                       \]
@@ -199,7 +199,10 @@ def hello():
 \vspace{1cm}
 \begin{center}
 {\sunflowerwatermark[80]{1.5}}
-\vspace{0.3cm}
+\end{center}
+
+\vspace{1cm}
+\begin{center}
 \textcolor{gray!60}{\small$\star$ 70asunflower \quad $\heartsuit$ 感谢阅读，欢迎交流 \quad $\star$ 全网同名}
 \end{center}
 ```
