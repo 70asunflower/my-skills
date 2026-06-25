@@ -1,0 +1,524 @@
+% ============================================================
+%  70asunflower Blog Template
+%  通用技术博客 LaTeX 模板
+%  Compile with: XeLaTeX
+% ============================================================
+\documentclass[fontset=fandol,11pt,a4paper]{ctexart}
+
+% 消除 Fandol 字体 Bold/Italic 警告
+\usepackage{xeCJK}
+\xeCJKsetup{AutoFakeBold=true, AutoFakeSlant=true}
+
+% ---------- 基础包 ----------
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{tikzpagenodes}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{titletoc}
+\usepackage{etoolbox}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{eso-pic}
+\usepackage{listings}
+
+% ---------- 页面设置 ----------
+\geometry{
+  left=2.4cm, right=2.4cm,
+  top=3.2cm, bottom=2.5cm,
+  headheight=25pt
+}
+
+% ---------- 配色 ----------
+\definecolor{Primary}{RGB}{42, 82, 120}
+\definecolor{Secondary}{RGB}{232, 119, 34}
+\definecolor{Accent}{RGB}{142, 68, 173}
+\definecolor{DarkText}{RGB}{44, 62, 80}
+\definecolor{LightBg}{RGB}{250, 248, 245}
+\definecolor{CodeBg}{RGB}{245, 245, 240}
+\definecolor{TipBg}{RGB}{232, 245, 233}
+\definecolor{WarnBg}{RGB}{255, 243, 224}
+\definecolor{FormulaBg}{RGB}{240, 244, 248}
+\definecolor{SoftBorder}{RGB}{220, 215, 210}
+
+% ---------- listings 代码样式 ----------
+\lstset{
+  basicstyle=\ttfamily\small\color{DarkText},
+  backgroundcolor=\color{CodeBg},
+  frame=none,
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=2,
+  keywordstyle=\color{Primary}\bfseries,
+  commentstyle=\color{gray!60}\itshape,
+  stringstyle=\color{Secondary},
+  numbers=none,
+  xleftmargin=0pt,
+  xrightmargin=0pt,
+  aboveskip=0pt,
+  belowskip=0pt
+}
+
+% ---------- hyperref ----------
+\hypersetup{
+  colorlinks=true,
+  linkcolor=Primary,
+  citecolor=Accent,
+  urlcolor=Secondary,
+  pdftitle={70asunflower Blog},
+  pdfauthor={70asunflower}
+}
+
+% ---------- 水印：向日葵（纯TikZ绘制）----------
+\newcommand{\sunflowerwatermark}[2][0.15]{
+  \begin{tikzpicture}[scale=#2]
+    \foreach \i in {0,22.5,...,337.5} {
+      \fill[Secondary!#1!yellow, rotate=\i] (0,0) ellipse (0.6 and 0.25);
+    }
+    \fill[Primary!#1!brown] (0,0) circle (0.3);
+    \fill[Secondary!#1!orange] (0,0) circle (0.12);
+  \end{tikzpicture}
+}
+
+% 每页背景水印
+\AddToShipoutPictureBG{
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[opacity=0.03, rotate=25] at (current page.center) {
+      \fontsize{55}{66}\selectfont\color{Secondary}\textbf{70asunflower}
+    };
+    \node[opacity=0.06] at ([xshift=-1.5cm, yshift=2cm]current page.south east) {
+      \sunflowerwatermark[30]{0.8}
+    };
+  \end{tikzpicture}
+}
+
+% ---------- 页眉页脚 ----------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{Primary}$\star$ 70asunflower}
+\fancyhead[R]{\small\color{Primary}\thesection\ \leftmark}
+\fancyfoot[C]{\small\color{gray!50}--- \thepage\ ---}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{SoftBorder}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0pt}
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
+
+% ---------- 章节标题 ----------
+\titleformat{\section}
+  {\normalfont\LARGE\bfseries\color{Primary}}
+  {\color{Secondary}\thesection}{0.8em}{}
+  [\vspace{-0.5em}\textcolor{SoftBorder}{\rule{\textwidth}{1pt}}]
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{Primary!80}}
+  {\color{Secondary}\thesubsection}{0.8em}{}
+
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\color{Primary!60}}
+  {\color{Secondary!80}\thesubsubsection}{0.8em}{}
+
+% ---------- 目录 ----------
+\titlecontents{section}[0pt]
+  {\bfseries\color{Primary}\addvspace{6pt}}
+  {\contentslabel{1.8em}}
+  {}
+  {\color{Secondary}\titlerule*[6pt]{.}\contentspage}
+\titlecontents{subsection}[1.8em]
+  {\color{Primary!80}}
+  {\contentslabel{2.2em}}
+  {}
+  {\color{SoftBorder}\titlerule*[6pt]{.}\contentspage}
+
+% ---------- tcolorbox ----------
+\usepackage[most,breakable,skins]{tcolorbox}
+
+% 封面卡片
+\newtcolorbox{covercard}[1][]{
+  enhanced, colback=LightBg, colframe=Primary, arc=4mm, boxrule=0pt,
+  leftrule=4pt, left=20pt, right=20pt, top=18pt, bottom=18pt,
+  shadow={2mm}{-2mm}{0mm}{black!20}, #1
+}
+
+% 摘要框
+\newtcolorbox{abstractcard}[1][]{
+  enhanced, colback=LightBg, colframe=SoftBorder, arc=2mm, boxrule=0pt,
+  leftrule=4pt, left=14pt, right=14pt, top=12pt, bottom=12pt,
+  borderline west={4pt}{0pt}{Secondary},
+  fonttitle=\bfseries\color{Primary}, coltitle=Primary,
+  attach boxed title to top left={yshift=-2mm, xshift=8mm},
+  boxed title style={colback=LightBg, arc=1mm, boxrule=0pt, left=8pt, right=8pt},
+  title={$\diamond$ 摘要}, #1
+}
+
+% 公式框
+\newtcolorbox{mathbox}[1][]{
+  enhanced, colback=FormulaBg, colframe=FormulaBg, arc=3mm, boxrule=0pt,
+  left=16pt, right=16pt, top=14pt, bottom=14pt,
+  shadow={1mm}{-1mm}{0mm}{black!10}, #1
+}
+
+% 代码框
+\newtcolorbox{codebox}[1][Python]{
+  enhanced, colback=CodeBg, colframe=SoftBorder, arc=2mm, boxrule=0.5pt,
+  left=12pt, right=12pt, top=10pt, bottom=10pt,
+  fonttitle=\bfseries\small\color{Primary}, coltitle=Primary,
+  attach boxed title to top left={yshift=-3mm, xshift=6mm},
+  boxed title style={colback=CodeBg, arc=1mm, boxrule=0.5pt, left=8pt, right=8pt, top=1pt, bottom=1pt},
+  title={$\triangleright$ #1},
+}
+
+% 提示框
+\newtcolorbox{tipbox}[1][]{
+  enhanced, colback=TipBg, colframe=TipBg, arc=2mm, boxrule=0pt,
+  left=12pt, right=12pt, top=10pt, bottom=10pt,
+  borderline west={3pt}{0pt}{green!60!black}, fontupper=\small, #1
+}
+
+% 警告框
+\newtcolorbox{warnbox}[1][]{
+  enhanced, colback=WarnBg, colframe=WarnBg, arc=2mm, boxrule=0pt,
+  left=12pt, right=12pt, top=10pt, bottom=10pt,
+  borderline west={3pt}{0pt}{Secondary}, fontupper=\small, #1
+}
+
+% 引用框
+\newtcolorbox{quotebox}[1][]{
+  enhanced, colback=LightBg, colframe=SoftBorder, arc=1mm, boxrule=0pt,
+  leftrule=3pt, left=14pt, right=14pt, top=8pt, bottom=8pt,
+  fontupper=\itshape\color{DarkText!80}, #1
+}
+
+% ---------- 列表 ----------
+\setlist[itemize]{leftmargin=*,label=\textcolor{Secondary}{\textbullet},topsep=4pt,itemsep=3pt}
+\setlist[enumerate]{leftmargin=*,topsep=4pt,itemsep=3pt}
+
+% ---------- 自定义命令 ----------
+\newcommand{\keyword}[1]{\textbf{\color{Primary}#1}}
+\newcommand{\concept}[1]{\textbf{\color{Accent}#1}}
+\newcommand{\highlight}[1]{\colorbox{Secondary!15}{#1}}
+\newcommand{\codeinline}[1]{\texttt{\color{Primary!80}#1}}
+
+% ---------- 文档开始 ----------
+\begin{document}
+
+% ==================== 封面（AI修改位置）====================
+\thispagestyle{empty}
+
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[Primary] (current page.north west) rectangle ([yshift=-0.6cm]current page.north east);
+  \fill[Primary!80] (current page.south west) rectangle ([yshift=0.3cm]current page.south east);
+\end{tikzpicture}
+
+\vspace*{1cm}
+
+\begin{center}
+  {\sunflowerwatermark[100]{2.5}}
+
+  \vspace{0.4cm}
+
+  % AI修改：日期、作者、标签
+  {\small\color{gray!70}$\bullet$ 2026年6月 \quad $\bullet$ 70asunflower \quad $\bullet$ 模板, 教程}
+
+  \vspace{0.6cm}
+
+  \begin{covercard}
+    % AI修改：标题
+    {\Huge\bfseries\color{Primary} 70asunflower 博客模板}
+
+    \vspace{0.3cm}
+
+    % AI修改：副标题
+    {\Large\color{Primary!80} Markdown 转 LaTeX 格式规范手册}
+
+    \vspace{0.4cm}
+
+    {\normalsize\color{gray!70}$\star$ 70asunflower \quad 技术博客}
+  \end{covercard}
+
+  \vspace{0.6cm}
+
+  % AI修改：摘要
+  \begin{abstractcard}
+    本文档是模板的自解释手册。AI 读取此模板后，应能根据以下规则将 Markdown 内容自动转换为该 LaTeX 格式。
+  \end{abstractcard}
+\end{center}
+
+\vspace{0.8cm}
+
+% ==================== 目录（自动生成，AI无需修改）====================
+{\Large\bfseries\color{Primary}$\equiv$ 目录}
+
+\tableofcontents
+
+% ==================== 正文：AI转换规则手册 ====================
+\newpage
+\setcounter{page}{2}
+
+\section{封面与元信息}
+\label{sec:meta}
+
+\subsection{修改位置说明}
+\label{subsec:meta-edit}
+
+AI 生成封面时，需替换以下四处内容：
+
+\begin{center}
+\begin{tabular}{>{\color{Primary}}l >{\color{DarkText}}l >{\color{gray!70}}l}
+\toprule
+\textbf{位置} & \textbf{LaTeX 代码} & \textbf{对应 Markdown} \\
+\midrule
+标题 & \verb|{\Huge\bfseries\color{Primary} 标题}| & \verb|# 标题| \\
+副标题 & \verb|{\Large\color{Primary!80} 副标题}| & 首段描述或无 \\
+日期 & \verb|$\bullet$ 2026年6月| & YAML frontmatter \verb|date| \\
+作者 & \verb|$\bullet$ 70asunflower| & YAML frontmatter \verb|author| \\
+标签 & \verb|$\bullet$ 标签1, 标签2| & YAML frontmatter \verb|tags| \\
+摘要 & \verb|\begin{abstractcard} ... \end{abstractcard}| & \verb|<!-- abstract -->| \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{warnbox}
+\textbf{$\triangle$ 注意：} 封面页使用 \verb|\thispagestyle{empty}|，页码从目录后的正文开始计数。
+\end{warnbox}
+
+\section{章节与目录}
+\label{sec:section}
+
+\subsection{章节层级映射}
+\label{subsec:section-map}
+
+\begin{center}
+\begin{tabular}{>{\color{Primary}}l >{\color{DarkText}}l}
+\toprule
+\textbf{Markdown} & \textbf{LaTeX} \\
+\midrule
+\verb|# 一级标题| & \verb|\section{一级标题}| \\
+\verb|## 二级标题| & \verb|\subsection{二级标题}| \\
+\verb|### 三级标题| & \verb|\subsubsection{三级标题}| \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{tipbox}
+\textbf{$\rightarrow$ 提示：} 目录由 \verb|\tableofcontents| 自动生成，无需手动维护。章节标题会自动显示在页眉右侧。
+\end{tipbox}
+
+\section{公式排版}
+\label{sec:formula}
+
+\subsection{行内公式}
+\label{subsec:inline-formula}
+
+Markdown 中的 \verb|$...$| 直接保留为 LaTeX 行内公式：
+\[
+\text{Markdown: } E=mc^2 \quad \Rightarrow \quad \text{LaTeX: } \verb|$E=mc^2$|
+\]
+
+\subsection{独立公式（放入公式框）}
+\label{subsec:display-formula}
+
+Markdown 中的 \verb|$$...$$| 或代码块标记为 \verb|math| 时，应放入 \verb|mathbox| 环境：
+
+\begin{mathbox}
+\[
+\int_{-\infty}^{+\infty} e^{-x^2} dx = \sqrt{\pi}
+\]
+\end{mathbox}
+
+对应 LaTeX 代码：
+\begin{codebox}[LaTeX]
+\begin{lstlisting}[language=TeX]
+\begin{mathbox}
+\[
+\int_{-\infty}^{+\infty} e^{-x^2} dx = \sqrt{\pi}
+\]
+\end{mathbox}
+\end{lstlisting}
+\end{codebox}
+
+\section{代码块}
+\label{sec:code}
+
+\subsection{基本规则}
+\label{subsec:code-rule}
+
+Markdown 中的 \verb| ```python | 代码块，应转换为 \verb|codebox| + \verb|lstlisting| 环境：
+
+\begin{codebox}[Python]
+\begin{lstlisting}[language=Python]
+def hello_world(name: str) -> str:
+    """返回问候语"""
+    return f"Hello, {name}!"
+\end{lstlisting}
+\end{codebox}
+
+\subsection{语言标签映射}
+\label{subsec:code-lang}
+
+\begin{center}
+\begin{tabular}{>{\color{Primary}}l >{\color{DarkText}}l}
+\toprule
+\textbf{Markdown 标记} & \textbf{codebox 标题参数} \\
+\midrule
+\verb|python| & \verb|[Python]| \\
+\verb|bash| / \verb|shell| & \verb|[Bash]| \\
+\verb|javascript| / \verb|js| & \verb|[JavaScript]| \\
+\verb|cpp| / \verb|c++| & \verb|[C++]| \\
+\verb|tex| / \verb|latex| & \verb|[LaTeX]| \\
+其他 & \verb|[Code]| \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{warnbox}
+\textbf{$\triangle$ 注意：} 切勿在 \verb|codebox| 内部使用 \verb|verbatim| 环境，必须使用 \verb|lstlisting|，否则编译报错。
+\end{warnbox}
+
+\section{特殊框体}
+\label{sec:boxes}
+
+\subsection{提示框（Tip）}
+\label{subsec:tip}
+
+Markdown 中的引用块若包含 \textbf{提示} 关键词，转换为 \verb|tipbox|：
+
+\begin{tipbox}
+\textbf{$\rightarrow$ 提示：} 这是提示框的内容。左侧有绿色竖线标识。
+\end{tipbox}
+
+LaTeX 代码：
+\begin{codebox}[LaTeX]
+\begin{lstlisting}[language=TeX]
+\begin{tipbox}
+\textbf{$\rightarrow$ 提示：} 内容...
+\end{tipbox}
+\end{lstlisting}
+\end{codebox}
+
+\subsection{警告框（Warning）}
+\label{subsec:warn}
+
+Markdown 中的引用块若包含 \textbf{警告/注意} 关键词，转换为 \verb|warnbox|：
+
+\begin{warnbox}
+\textbf{$\triangle$ 注意：} 这是警告框的内容。左侧有橙色竖线标识。
+\end{warnbox}
+
+\subsection{引用框（Quote）}
+\label{subsec:quote}
+
+普通引用块转换为 \verb|quotebox|：
+
+\begin{quotebox}
+这是引用框的内容，默认斜体显示，适合放置重要结论或假设。
+\end{quotebox}
+
+\section{列表与表格}
+\label{sec:list-table}
+
+\subsection{无序列表}
+\label{subsec:ul}
+
+Markdown：
+\begin{codebox}[Markdown]
+\begin{lstlisting}
+- 项目一
+- 项目二
+- 项目三
+\end{lstlisting}
+\end{codebox}
+
+LaTeX 转换结果：
+\begin{itemize}
+  \item 项目一
+  \item 项目二
+  \item 项目三
+\end{itemize}
+
+\subsection{有序列表}
+\label{subsec:ol}
+
+Markdown：
+\begin{codebox}[Markdown]
+\begin{lstlisting}
+1. 步骤一
+2. 步骤二
+3. 步骤三
+\end{lstlisting}
+\end{codebox}
+
+LaTeX 转换结果：
+\begin{enumerate}
+  \item 步骤一
+  \item 步骤二
+  \item 步骤三
+\end{enumerate}
+
+\subsection{表格}
+\label{subsec:table}
+
+Markdown 表格转换为 \verb|booktabs| 风格的 \verb|tabular|：
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{姓名} & \textbf{年龄} & \textbf{职业} \\
+\midrule
+Alice & 24 & 工程师 \\
+Bob & 30 & 研究员 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{文本高亮}
+\label{sec:highlight}
+
+\subsection{关键词与概念}
+\label{subsec:keyword}
+
+\begin{center}
+\begin{tabular}{>{\color{Primary}}l >{\color{DarkText}}l >{\color{gray!70}}l}
+\toprule
+\textbf{Markdown} & \textbf{LaTeX 命令} & \textbf{效果} \\
+\midrule
+\verb|**关键词**| & \verb|\keyword{关键词}| & \keyword{蓝色粗体} \\
+\verb|*概念*| & \verb|\concept{概念}| & \concept{紫色粗体} \\
+\verb|==高亮==| & \verb|\highlight{高亮}| & \highlight{橙色背景} \\
+\verb|``代码``| & \verb|\codeinline{代码}| & \codeinline{等宽字体} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{结语与页脚}
+\label{sec:footer}
+
+\subsection{结语写法}
+\label{subsec:conclusion}
+
+文档结尾使用无编号章节 \verb|\section*{结语}|，并放入 \verb|quotebox|：
+
+\begin{quotebox}
+本文档展示了 70asunflower 博客模板的全部转换规则。AI 读取此模板后，应能自动化完成 Markdown 到 LaTeX 的格式转换。
+\end{quotebox}
+
+\subsection{页脚水印}
+\label{subsec:watermark}
+
+每页背景自动包含 \textbf{70asunflower} 文字水印和右下角向日葵图标。结语页可额外放置大图标：
+
+\begin{center}
+{\sunflowerwatermark[80]{1.5}}
+\end{center}
+
+\vspace{1cm}
+
+\begin{center}
+\textcolor{gray!60}{\small$\star$ 70asunflower \quad $\heartsuit$ 感谢阅读，欢迎交流 \quad $\star$ 全网同名}
+\end{center}
+
+\end{document}
