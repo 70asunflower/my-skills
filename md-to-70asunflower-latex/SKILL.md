@@ -219,12 +219,18 @@ def hello():
 % ... 所有包和定义 ...
 
 \begin{document}
-% 封面（填充用户内容）
-% 目录（自动生成）
-% 正文（转换后的内容）
+% 封面（填充用户内容，thispagestyle{empty}，无页码）
+% 目录（\pagenumbering{Roman}，罗马数字页码，避免与正文页码冲突）
+% 正文（\newpage \pagenumbering{arabic} \setcounter{page}{2}，从第2页开始）
 % 结语
 \end{document}
 ```
+
+## 页码管理
+
+封面使用 `\thispagestyle{empty}` 隐藏页码，但物理上算第 1 页。
+目录使用 `\pagenumbering{Roman}` 分配罗马数字页码（I, II, …）。
+正文使用 `\pagenumbering{arabic}` 并 `\setcounter{page}{2}`，从第 2 页开始计数，与 TOC 的罗马数字页码隔离，互不干扰。
 
 ## 编译说明
 
