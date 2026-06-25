@@ -1,0 +1,528 @@
+﻿% ============================================================
+%  70asunflower Blog Template
+%  大模型量化：从底层数据表示到工程落地指南
+%  Compile with: XeLaTeX
+% ============================================================
+\documentclass[fontset=fandol,11pt,a4paper]{ctexart}
+
+% 消除 Fandol 字体 Bold/Italic 警告
+\usepackage{xeCJK}
+\xeCJKsetup{AutoFakeBold=true, AutoFakeSlant=true}
+
+% ---------- 基础包 ----------
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{tikzpagenodes}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{titletoc}
+\usepackage{etoolbox}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{eso-pic}
+\usepackage{listings}
+
+% ---------- 页面设置 ----------
+\geometry{
+  left=2.4cm, right=2.4cm,
+  top=3.2cm, bottom=2.5cm,
+  headheight=25pt
+}
+
+% ---------- 配色 ----------
+\definecolor{Primary}{RGB}{42, 82, 120}
+\definecolor{Secondary}{RGB}{232, 119, 34}
+\definecolor{Accent}{RGB}{142, 68, 173}
+\definecolor{DarkText}{RGB}{44, 62, 80}
+\definecolor{LightBg}{RGB}{250, 248, 245}
+\definecolor{CodeBg}{RGB}{245, 245, 240}
+\definecolor{TipBg}{RGB}{232, 245, 233}
+\definecolor{WarnBg}{RGB}{255, 243, 224}
+\definecolor{FormulaBg}{RGB}{240, 244, 248}
+\definecolor{SoftBorder}{RGB}{220, 215, 210}
+
+% ---------- listings 代码样式 ----------
+\lstset{
+  basicstyle=\ttfamily\small\color{DarkText},
+  backgroundcolor=\color{CodeBg},
+  frame=none,
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=2,
+  keywordstyle=\color{Primary}\bfseries,
+  commentstyle=\color{gray!60}\itshape,
+  stringstyle=\color{Secondary},
+  numbers=none,
+  xleftmargin=0pt,
+  xrightmargin=0pt,
+  aboveskip=0pt,
+  belowskip=0pt
+}
+
+% ---------- hyperref ----------
+\hypersetup{
+  colorlinks=true,
+  linkcolor=Primary,
+  citecolor=Accent,
+  urlcolor=Secondary,
+  pdftitle={大模型量化：从底层数据表示到工程落地指南},
+  pdfauthor={70asunflower}
+}
+
+% ---------- 水印：向日葵（纯TikZ绘制）----------
+\newcommand{\sunflowerwatermark}[2][0.15]{
+  \begin{tikzpicture}[scale=#2]
+    \foreach \i in {0,22.5,...,337.5} {
+      \fill[Secondary!#1!yellow, rotate=\i] (0,0) ellipse (0.6 and 0.25);
+    }
+    \fill[Primary!#1!brown] (0,0) circle (0.3);
+    \fill[Secondary!#1!orange] (0,0) circle (0.12);
+  \end{tikzpicture}
+}
+
+% 每页背景水印
+\AddToShipoutPictureBG{
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[opacity=0.03, rotate=25] at (current page.center) {
+      \fontsize{55}{66}\selectfont\color{Secondary}\textbf{70asunflower}
+    };
+    \node[opacity=0.06] at ([xshift=-1.5cm, yshift=2cm]current page.south east) {
+      \sunflowerwatermark[30]{0.8}
+    };
+  \end{tikzpicture}
+}
+
+% ---------- 页眉页脚 ----------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{Primary}$\star$ 70asunflower}
+\fancyhead[R]{\small\color{Primary}\thesection\ \leftmark}
+\fancyfoot[C]{\small\color{gray!50}--- \thepage\ ---}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{SoftBorder}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0pt}
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
+
+% ---------- 章节标题 ----------
+\titleformat{\section}
+  {\normalfont\LARGE\bfseries\color{Primary}}
+  {\color{Secondary}\thesection}{0.8em}{}
+  [\vspace{-0.5em}\textcolor{SoftBorder}{\rule{\textwidth}{1pt}}]
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{Primary!80}}
+  {\color{Secondary}\thesubsection}{0.8em}{}
+
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\color{Primary!60}}
+  {\color{Secondary!80}\thesubsubsection}{0.8em}{}
+
+% ---------- 目录 ----------
+\titlecontents{section}[0pt]
+  {\bfseries\color{Primary}\addvspace{6pt}}
+  {\contentslabel{1.8em}}
+  {}
+  {\color{Secondary}\titlerule*[6pt]{.}\contentspage}
+\titlecontents{subsection}[1.8em]
+  {\color{Primary!80}}
+  {\contentslabel{2.2em}}
+  {}
+  {\color{SoftBorder}\titlerule*[6pt]{.}\contentspage}
+
+% ---------- tcolorbox ----------
+\usepackage[most,breakable,skins]{tcolorbox}
+
+% 封面卡片
+\newtcolorbox{covercard}[1][]{
+  enhanced, colback=LightBg, colframe=Primary, arc=4mm, boxrule=0pt,
+  leftrule=4pt, left=20pt, right=20pt, top=18pt, bottom=18pt,
+  shadow={2mm}{-2mm}{0mm}{black!20}, #1
+}
+
+% 摘要框
+\newtcolorbox{abstractcard}[1][]{
+  enhanced, colback=LightBg, colframe=SoftBorder, arc=2mm, boxrule=0pt,
+  leftrule=4pt, left=14pt, right=14pt, top=12pt, bottom=12pt,
+  borderline west={4pt}{0pt}{Secondary},
+  fonttitle=\bfseries\color{Primary}, coltitle=Primary,
+  attach boxed title to top left={yshift=-2mm, xshift=8mm},
+  boxed title style={colback=LightBg, arc=1mm, boxrule=0pt, left=8pt, right=8pt},
+  title={$\diamond$ 摘要}, #1
+}
+
+% 公式框
+\newtcolorbox{mathbox}[1][]{
+  enhanced, colback=FormulaBg, colframe=FormulaBg, arc=3mm, boxrule=0pt,
+  left=16pt, right=16pt, top=14pt, bottom=14pt,
+  shadow={1mm}{-1mm}{0mm}{black!10}, #1
+}
+
+% 代码框
+\newtcolorbox{codebox}[1][Python]{
+  enhanced, colback=CodeBg, colframe=SoftBorder, arc=2mm, boxrule=0.5pt,
+  left=12pt, right=12pt, top=10pt, bottom=10pt,
+  fonttitle=\bfseries\small\color{Primary}, coltitle=Primary,
+  attach boxed title to top left={yshift=-3mm, xshift=6mm},
+  boxed title style={colback=CodeBg, arc=1mm, boxrule=0.5pt, left=8pt, right=8pt, top=1pt, bottom=1pt},
+  title={$\triangleright$ #1},
+}
+
+% 提示框
+\newtcolorbox{tipbox}[1][]{
+  enhanced, colback=TipBg, colframe=TipBg, arc=2mm, boxrule=0pt,
+  left=12pt, right=12pt, top=10pt, bottom=10pt,
+  borderline west={3pt}{0pt}{green!60!black}, fontupper=\small, #1
+}
+
+% 警告框
+\newtcolorbox{warnbox}[1][]{
+  enhanced, colback=WarnBg, colframe=WarnBg, arc=2mm, boxrule=0pt,
+  left=12pt, right=12pt, top=10pt, bottom=10pt,
+  borderline west={3pt}{0pt}{Secondary}, fontupper=\small, #1
+}
+
+% 引用框
+\newtcolorbox{quotebox}[1][]{
+  enhanced, colback=LightBg, colframe=SoftBorder, arc=1mm, boxrule=0pt,
+  leftrule=3pt, left=14pt, right=14pt, top=8pt, bottom=8pt,
+  fontupper=\itshape\color{DarkText!80}, #1
+}
+
+% ---------- 列表 ----------
+\setlist[itemize]{leftmargin=*,label=\textcolor{Secondary}{\textbullet},topsep=4pt,itemsep=3pt}
+\setlist[enumerate]{leftmargin=*,topsep=4pt,itemsep=3pt}
+
+% ---------- 自定义命令 ----------
+\newcommand{\keyword}[1]{\textbf{\color{Primary}#1}}
+\newcommand{\concept}[1]{\textbf{\color{Accent}#1}}
+\newcommand{\highlight}[1]{\colorbox{Secondary!15}{#1}}
+\newcommand{\codeinline}[1]{\texttt{\color{Primary!80}#1}}
+
+% ==================== 文档开始 ====================
+\begin{document}
+
+% ==================== 封面 ====================
+\thispagestyle{empty}
+
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[Primary] (current page.north west) rectangle ([yshift=-0.6cm]current page.north east);
+  \fill[Primary!80] (current page.south west) rectangle ([yshift=0.3cm]current page.south east);
+\end{tikzpicture}
+
+\vspace*{1cm}
+
+\begin{center}
+  {\sunflowerwatermark[100]{2.5}}
+
+  \vspace{0.4cm}
+
+  {\small\color{gray!70}$\bullet$ 2026年6月 \quad $\bullet$ 70asunflower \quad $\bullet$ 大模型, 量化, AI Infra}
+
+  \vspace{0.6cm}
+
+  \begin{covercard}
+    {\Huge\bfseries\color{Primary} 大模型量化：从底层数据表示到工程落地指南}
+
+    \vspace{0.3cm}
+
+    {\Large\color{Primary!80} 数据格式、硬件加速与量化全流程深度解构}
+
+    \vspace{0.4cm}
+
+    {\normalsize\color{gray!70}$\star$ 70asunflower \quad AI Infra}
+  \end{covercard}
+
+  \vspace{0.6cm}
+
+  \begin{abstractcard}
+    随着大模型参数量的爆炸式增长，模型推理的显存占用和计算延迟成为了落地的最大瓶颈。为了解决这个问题，量化技术应运而生。它就像是模型界的"压缩算法"，在性能和效率之间寻找完美的平衡点。本文将从计算机底层数据表示出发，深入剖析主流权重格式的本质，揭示量化背后的硬件加速机制，并重点解构量化的完整流程，为你构建一套完整的量化知识体系。
+  \end{abstractcard}
+\end{center}
+
+\vspace{0.8cm}
+
+% ==================== 目录 ====================
+\tableofcontents
+
+% ==================== 正文 ====================
+\newpage
+\setcounter{page}{2}
+
+\section{模型权重的"基因"——数据格式全景解析}
+
+理解量化，首先要理解模型权重是如何在计算机中存储的。不同的数据格式决定了模型的体积、计算速度和精度上限。
+
+\subsection{1. 主流格式速览}
+
+目前主流的权重数据格式主要分为浮点数和整数两大阵营：
+
+\begin{center}
+\begin{tabular}{>{\color{Primary}}l >{\color{DarkText}}l >{\color{gray!70}}l >{\color{DarkText}}l}
+\toprule
+\textbf{数据格式} & \textbf{位宽} & \textbf{内存占用} & \textbf{核心特点} \\
+\midrule
+FP32 & 32位 & 4字节 & 基准格式，精度最高，开销大 \\
+FP16 & 16位 & 2字节 & 主流推理格式，速度与精度的平衡 \\
+BF16 & 16位 & 2字节 & 与FP32范围一致，数值稳定性好 \\
+INT8 & 8位 & 1字节 & 推理黄金标准，体积缩小4倍 \\
+FP8 & 8位 & 1字节 & 新兴格式，兼顾范围与效率 \\
+NF4 & 4位 & 0.5字节 & 专为正态分布设计，极致压缩 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{2. 深入辨析：浮点数 vs 整数}
+
+很多初学者会问："FP16 有多少位整数，多少位小数？" 这是一个典型的误区。
+
+\concept{浮点数（FP系列）没有固定的"整数位"和"小数位"。}
+
+它们采用科学计数法存储：
+\[
+V = (-1)^S \times M \times 2^E
+\]
+
+\begin{itemize}
+  \item \keyword{符号位（S）}：决定正负。
+  \item \keyword{指数位（E）}：决定数值的范围（能存多大的数）。
+  \item \keyword{尾数位（M）}：决定数值的精度（能存多细的数）。
+\end{itemize}
+
+例如，FP16 有 5 位指数、10 位尾数；而 BF16 为了防止数值溢出，把指数位扩充到了 8 位（与 FP32 一致），牺牲了尾数精度。这也解释了为什么 BF16 训练更稳定——因为它能表示的数值范围和 FP32 一样大。
+
+\concept{整数（INT系列）则是定点数。}
+
+在量化存储时，我们通常将其视为 Q 格式。例如 INT8 常被看作 Q8.0（8位整数，0位小数）。但在量化计算中，为了理解其代表的物理含义，我们会引入缩放因子，使其具备表示小数的能力。
+
+\section{计算机底层视角——数据是如何存储与计算的？}
+
+要真正懂量化，必须剥开表象，看到二进制的"灵魂"。
+
+\subsection{1. 整数的智慧：为什么用补码？}
+
+计算机存储有符号整数（如 INT8）时，使用的是\concept{补码}。
+
+为什么不用直观的原码（最高位做符号位）？因为补码有一个神奇的特性：\keyword{减法可以变成加法}。
+
+试想计算 \codeinline{1 + (-1)}：
+
+\begin{itemize}
+  \item \codeinline{1} 的二进制是 \codeinline{00000001}。
+  \item \codeinline{-1} 的补码是 \codeinline{11111111}（原码取反再加1）。
+  \item 两者相加：\codeinline{00000001 + 11111111 = 1 00000000}。
+  \item 结果的第 9 位溢出丢弃，剩下 \codeinline{00000000}（即 0）。
+\end{itemize}
+
+这使得计算机不需要设计复杂的减法电路，只需要一个加法器和取反逻辑即可，极大地简化了硬件设计。
+
+\begin{tipbox}
+\textbf{$\rightarrow$ 提示：} 补码的这一特性是计算机算术运算的核心基石，理解它能帮助你更深入理解量化计算中的 INT32 累加行为。
+\end{tipbox}
+
+\subsection{2. 浮点数的艺术：偏置码}
+
+浮点数的指数部分并不直接存储指数值，而是存储\concept{偏置码}。
+
+假设真实指数是 \codeinline{-1}，如果是补码存储，结果是 \codeinline{11111111}；如果是 \codeinline{3}，结果是 \codeinline{00000011}。这在二进制比较时会出现问题：\codeinline{11111111}（-1）竟然比 \codeinline{00000011}（3）大！
+
+为了让计算机能像比较无符号整数一样快速比较浮点数大小，IEEE 754 标准规定：\keyword{存储指数 = 真实指数 + 偏置值}。
+
+例如 FP32 的偏置值是 127。
+\begin{itemize}
+  \item 真实指数 \codeinline{3} $\rightarrow$ 存储 \codeinline{3 + 127 = 130}。
+  \item 真实指数 \codeinline{-1} $\rightarrow$ 存储 \codeinline{-1 + 127 = 126}。
+\end{itemize}
+
+此时，\codeinline{130 > 126}，硬件只需对比一次二进制大小就能得出正确的指数大小关系，这对排序和浮点运算至关重要。
+
+\section{量化推理的完整生命周期}
+
+这是量化最核心的工程环节。一个模型从 FP32 转变为 INT8 进行推理，并非简单的一步转换，而是一个精密的流水线过程。我们可以将其分为四个阶段。
+
+\subsection{阶段一：离线校准——寻找"尺子"}
+
+这是量化的准备阶段，核心目标是确定每一层的 \codeinline{Scale（缩放因子）} 和 \codeinline{Zero Point（零点）}。
+
+\subsubsection{为什么需要校准？}
+
+权重是静态的，我们可以提前算好它的范围。但激活值是动态的，随着输入不同而变化。我们需要通过校准，预估激活值的典型分布范围，从而确定一个最佳的"映射比例尺"。
+
+\subsubsection{校准数据集}
+
+从训练集中选取少量（如 500--1000 张）具有代表性的样本。无需全量数据，但要覆盖典型场景。
+
+\subsubsection{核心算法（如何计算 Scale）}
+
+\begin{enumerate}
+  \item \keyword{Min-Max（最大最小值）}：直接取样本中的最大最小值。
+  
+  \textit{缺点}：如果有一个极端的离群点，Scale 会变得非常大，导致大部分数值量化后精度丢失严重。
+  
+  \item \keyword{Percentile（分位数）}：取 99.9\% 或 99\% 的分位点作为边界，忽略极个别的 Outlier。工程上最常用，鲁棒性强。
+  
+  \item \keyword{KL Divergence（KL 散度 / 熵）}：寻找一个 Scale，使得量化后的数据分布与原始分布的差异（KL 散度）最小。这是 TensorRT 默认的策略，精度通常最高，但计算开销大。
+\end{enumerate}
+
+\textbf{产出物}：一个量化参数表，记录了每一层权重和激活值的 Scale (FP32) 和 Zero Point (INT32)。
+
+\subsection{阶段二：权重量化——静态转换}
+
+有了 Scale，我们就可以把模型权重从 FP32 转为 INT8 了。这是一个\keyword{一次性}的过程。
+
+\begin{mathbox}
+\[
+Q = \text{clamp}(\text{round}(W_{fp32} / S) + Z)
+\]
+\end{mathbox}
+
+\textbf{结果}：模型文件体积缩小为原来的 1/4。此时，模型文件里存的是 INT8 权重，以及附属的 Scale / Zero Point 参数。
+
+\subsection{阶段三：在线推理——实时计算}
+
+当用户发起推理请求时，流程如下：
+
+\subsubsection{1. 输入量化}
+
+用户的输入数据（FP32/FP16）进入模型。对于量化层，需要先进行实时量化：
+
+\[
+X_{int8} = \text{round}(X_{fp32} / S_x) + Z_x
+\]
+
+\subsubsection{2. INT8 核心计算}
+
+这一步是量化的灵魂。\codeinline{$X_{int8}$} 与 \codeinline{$W_{int8}$} 送入 Tensor Core 或 NPU 进行矩阵乘法。
+
+\begin{itemize}
+  \item 输入：两个 INT8 矩阵。
+  \item 计算：INT8 $\times$ INT8 $\rightarrow$ INT32 累加。
+\end{itemize}
+
+\begin{tipbox}
+\textbf{$\rightarrow$ 提示：} 为什么累加用 INT32？因为多个 INT8 相加很容易溢出，必须用更大的"桶"来装。
+\end{tipbox}
+
+\subsubsection{3. 反量化}
+
+计算得到的 INT32 结果没有物理意义，必须还原回浮点数。
+
+\[
+Y_{fp32} = (Y_{int32} - Bias) \times S_{out}
+\]
+
+这里用到了之前保存的 FP32 Scale，将整数结果"翻译"回真实的浮点数值。
+
+\subsubsection{4. 后处理}
+
+接下来是 LayerNorm、Softmax 等非矩阵操作。这些操作通常保持 FP16/FP32 精度，以保证数值稳定性。
+
+\subsection{阶段四：精度与性能的权衡}
+
+在整个流程中，有几个关键的权衡点：
+
+\subsubsection{Per-Tensor vs Per-Channel}
+
+\begin{itemize}
+  \item \keyword{Per-Tensor}：整层共用一个 Scale。开销小，但精度低。
+  \item \keyword{Per-Channel}：每个卷积核/通道单独一个 Scale。精度高，是目前主流做法，但参数量略增。
+\end{itemize}
+
+\subsubsection{混合精度}
+
+如果发现某些层量化后误差爆炸（通常是第一层或最后一层），可以策略性地让这些层保持 FP16，其余层用 INT8。这叫\concept{"保帅弃车"}。
+
+\begin{warnbox}
+\textbf{$\triangle$ 注意：} 混合精度需要更精细的调度和显存管理，但通常是量化精度损失的最后一道防线。
+\end{warnbox}
+
+\section{AI Infra 面试高频考点与实战策略}
+
+如果你准备面试 AI Infra 或推理优化岗位，以下是必须掌握的核心考点。
+
+\subsection{1. 什么是"硬件支持"？}
+
+很多人以为量化只是把 \codeinline{float} 强转成 \codeinline{int}。其实不然。
+
+\begin{itemize}
+  \item \keyword{软件模拟}：在不支持 INT8 计算的旧 CPU 上，用多条指令模拟一次 INT8 乘法，速度反而变慢。
+  \item \keyword{硬件加速}：现代 GPU（如 NVIDIA Tensor Core）、NPU 内部有专门的物理电路，一条指令就能完成 $4 \times 4$ 甚至 $16 \times 16$ 的 INT8 矩阵乘法。这就是量化能提速 2--4 倍的物理基础。
+\end{itemize}
+
+\subsection{2. Scale (FP32) 的本质：一把高精度的尺子}
+
+\keyword{Scale（缩放因子）必须是 FP32。}
+
+为什么？因为它是连接"整数域"和"浮点域"的唯一桥梁。
+
+\begin{itemize}
+  \item INT8 数字（如 1, 2, 127）只代表相对等级。
+  \item Scale 告诉计算机："这个等级 1 代表真实的 0.01，那个等级 1 代表真实的 100.0"。
+\end{itemize}
+
+如果 Scale 本身精度不够（比如也是 INT8），那么映射的误差将无法控制，导致模型输出崩塌。所以，哪怕权重变成了 INT8，Scale 依然必须保持高精度（FP32）来"锚定"数值的真实含义。
+
+\subsection{3. 场景题：精度损失怎么查？}
+
+如果量化后模型"智障"了，排查思路如下：
+
+\begin{enumerate}
+  \item \keyword{逐层对比}：Hook 每一层输出，计算 FP16 和 INT8 的余弦相似度，找到相似度骤降的"坏层"。
+  \item \keyword{检查 Outlier}：大模型常有离群点（极大值），导致 Scale 剧增，普通数据量化后全变成 0。
+  
+  \textit{解法}：使用 SmoothQuant 将激活值的难度迁移到权重，或者采用 SmoothQuant 算法。
+  
+  \item \keyword{敏感层分析}：首层和尾层通常对精度极敏感，尝试保持 FP16，仅量化中间层。
+\end{enumerate}
+
+\subsection{4. 硬件与算子}
+
+\begin{itemize}
+  \item \keyword{Tensor Core 利用条件}：矩阵维度必须对齐（如 16 的倍数），数据排布必须符合硬件要求（如 NC/4HW4），否则无法触发加速单元。
+  \item \keyword{KV Cache 量化}：大模型推理 Decode 阶段是 Memory Bound（显存带宽瓶颈）。量化 KV Cache（INT8/FP8）比量化权重更能提升并发吞吐量，因为直接减少了显存读写量。
+\end{itemize}
+
+\section{深度思考——量化改变了 AI 的"灵魂"吗？}
+
+最后，我们回到一个本质问题：把高精度的数字强行变成粗糙的整数，信息丢失了吗？
+
+\textbf{答案是：丢失了"刻度"，保留了"结构"。}
+
+神经网络的信息并不在于某个权重的绝对值是 \codeinline{0.123} 还是 \codeinline{0.124}，而在于神经元之间数字的\concept{相对关系（拓扑结构）}。
+
+\begin{itemize}
+  \item 如果权重 A 是权重 B 的两倍，量化后（INT8），这个"两倍"的关系依然存在。
+  \item 如果向量 A 和向量 B 夹角很大，量化后，它们的夹角依然很大。
+\end{itemize}
+
+\subsubsection{乐高积木比喻}
+
+FP32 模型就像精细的 3D 雕塑，而 INT8 量化模型就像是用乐高积木拼出来的雕塑。虽然乐高积木（INT8）表面粗糙，丢失了原本细腻的曲面细节（绝对值精度），但它完美保留了雕塑的轮廓、姿态和神韵（数字间的关系）。
+
+\keyword{Scale 就是那张"说明书"}，它告诉我们："这个乐高模型是按 1:100 比例缩小的"。没有这个高精度的 Scale，我们就无法理解积木块代表的真实物理尺寸。
+
+\begin{tipbox}
+\textbf{$\rightarrow$ 提示：} 量化的本质是拓扑保持——丢失的是微小的绝对量，保留的是至关重要的相对关系。这一洞察对理解为什么量化后的模型仍然"聪明"至关重要。
+\end{tipbox}
+
+% ==================== 结语 ====================
+\section*{结语}
+
+\begin{quotebox}
+量化技术是大模型落地的必经之路。它不是简单的数字截断，而是一场算法（误差补偿）、硬件（Tensor Core / NPU）与数学（拓扑保持）的深度协同。
+
+理解了底层的补码与偏置，明白了中层的 Scale 与反量化机制，掌握了上层的面试考点，你就拥有了一张通往 AI Infra 深水区的通行证。
+\end{quotebox}
+
+\vspace{1cm}
+\begin{center}
+{\sunflowerwatermark[80]{1.5}}
+\vspace{0.3cm}
+\textcolor{gray!60}{\small$\star$ 70asunflower \quad $\heartsuit$ 感谢阅读，欢迎交流 \quad $\star$ 全网同名}
+\end{center}
+
+\end{document}
