@@ -9,6 +9,25 @@
 \usepackage{xeCJK}
 \xeCJKsetup{AutoFakeBold=true, AutoFakeSlant=true}
 
+% ---------- 字体配置：中英数、代码、数学各用常见字体 ----------
+% 编译器：XeLaTeX。这里使用 TeX Live / Overleaf 常见字体，并为 CJK 字体提供回退。
+\usepackage{fontspec}
+\defaultfontfeatures{Ligatures=TeX}
+
+% 英文与数字正文：Times-like，是技术文章和论文中最常见的衬线风格之一。
+\IfFontExistsTF{TeX Gyre Termes}{\setmainfont{TeX Gyre Termes}}{\setmainfont{Latin Modern Roman}}
+% 英文无衬线：Helvetica-like，适合标题、页眉等。
+\IfFontExistsTF{TeX Gyre Heros}{\setsansfont{TeX Gyre Heros}}{\setsansfont{Latin Modern Sans}}
+% 代码等宽：优先使用 TeX Live 常见等宽字体。
+\IfFontExistsTF{Latin Modern Mono}{\setmonofont{Latin Modern Mono}}{\setmonofont{Courier New}}
+
+% 中文正文：优先 Noto/思源 CJK；不可用时回退到 TeX Live 自带 Fandol。
+\IfFontExistsTF{Noto Serif CJK SC}{\setCJKmainfont{Noto Serif CJK SC}}{\setCJKmainfont{FandolSong}}
+\IfFontExistsTF{Noto Sans CJK SC}{\setCJKsansfont{Noto Sans CJK SC}}{\setCJKsansfont{FandolHei}}
+\IfFontExistsTF{Noto Sans Mono CJK SC}{\setCJKmonofont{Noto Sans Mono CJK SC}}{\setCJKmonofont{FandolFang}}
+
+% 数学字体：保持 LaTeX 默认数学字体（Latin Modern Math / Computer Modern 系），兼容性最好。
+
 % ---------- 基础包 ----------
 \usepackage{geometry}
 \usepackage{xcolor}
@@ -26,6 +45,19 @@
 \usepackage{graphicx}
 \usepackage{eso-pic}
 \usepackage{listings}
+
+% ---------- 长文档与技术手册增强包 ----------
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{makecell}
+\usepackage{ragged2e}
+\usepackage{xurl}
+\usepackage{needspace}
+\usepackage{placeins}
+\usepackage{fvextra}
+\usepackage{microtype}
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+
 
 % ---------- 页面设置 ----------
 \geometry{
@@ -52,6 +84,9 @@
   backgroundcolor=\color{CodeBg},
   frame=none,
   breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  keepspaces=true,
   showstringspaces=false,
   tabsize=2,
   keywordstyle=\color{Primary}\bfseries,
@@ -101,7 +136,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\color{Primary}$\star$ 70asunflower}
-\fancyhead[R]{\small\color{Primary}\thesection\ \leftmark}
+\fancyhead[R]{\small\color{Primary}\leftmark}
 \fancyfoot[C]{\small\color{gray!50}--- \thepage\ ---}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\headrule}{\hbox to\headwidth{\color{SoftBorder}\leaders\hrule height \headrulewidth\hfill}}
@@ -121,6 +156,10 @@
 \titleformat{\subsubsection}
   {\normalfont\normalsize\bfseries\color{Primary!60}}
   {\color{Secondary!80}\thesubsubsection}{0.8em}{}
+
+\titleformat{\paragraph}
+  {\normalfont\normalsize\bfseries\color{Accent}}
+  {}{0em}{}
 
 % ---------- 目录 ----------
 \titlecontents{section}[0pt]
@@ -193,6 +232,38 @@
   fontupper=\itshape\color{DarkText!80}, #1
 }
 
+
+% Part 分隔卡片：适合长篇技术手册中的 Part/篇章标题
+\newtcolorbox{partcard}[1][]{
+  enhanced, breakable, colback=Primary!5, colframe=Primary, arc=3mm, boxrule=0pt,
+  leftrule=5pt, left=18pt, right=18pt, top=14pt, bottom=14pt,
+  shadow={1mm}{-1mm}{0mm}{black!10}, #1
+}
+
+% 面试常问框
+\newtcolorbox{interviewbox}[1][]{
+  enhanced, breakable, colback=Accent!5, colframe=Accent!30, arc=2mm, boxrule=0pt,
+  borderline west={3pt}{0pt}{Accent}, fontupper=\small,
+  fonttitle=\bfseries\color{Accent}, coltitle=Accent,
+  attach boxed title to top left={yshift=-2mm, xshift=8mm},
+  boxed title style={colback=Accent!5, arc=1mm, boxrule=0pt, left=8pt, right=8pt},
+  title={$\star$ 面试常问}, #1
+}
+
+% 核心要点框
+\newtcolorbox{keypointsbox}[1][]{
+  enhanced, breakable, colback=TipBg, colframe=TipBg, arc=2mm, boxrule=0pt,
+  borderline west={3pt}{0pt}{green!60!black}, fontupper=\small,
+  fonttitle=\bfseries\color{green!40!black}, coltitle=green!40!black,
+  attach boxed title to top left={yshift=-2mm, xshift=8mm},
+  boxed title style={colback=TipBg, arc=1mm, boxrule=0pt, left=8pt, right=8pt},
+  title={$\rightarrow$ 核心要点}, #1
+}
+
+% 术语/数据类型轻量高亮（谨慎使用，避免全文过度花哨）
+\newcommand{\dtype}[1]{\texttt{\color{Primary}#1}}
+\newcommand{\method}[1]{\textbf{\color{Accent}#1}}
+
 % ---------- 列表 ----------
 \setlist[itemize]{leftmargin=*,label=\textcolor{Secondary}{\textbullet},topsep=4pt,itemsep=3pt}
 \setlist[enumerate]{leftmargin=*,topsep=4pt,itemsep=3pt}
@@ -202,6 +273,13 @@
 \newcommand{\concept}[1]{\textbf{\color{Accent}#1}}
 \newcommand{\highlight}[1]{\colorbox{Secondary!15}{#1}}
 \newcommand{\codeinline}[1]{\texttt{\color{Primary!80}#1}}
+
+% ---------- 长文档默认设置 ----------
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{0}
+\linespread{1.08}
+\emergencystretch=3em
+\sloppy
 
 % ---------- 文档开始 ----------
 \begin{document}
@@ -217,14 +295,19 @@
 \vspace*{1cm}
 
 \begin{center}
-  {\sunflowerwatermark[100]{2.5}}
+  % Logo 单独占一行；\par 防止后续元信息和 logo 挤在同一行
+  \sunflowerwatermark[100]{2.5}\par
 
-  \vspace{0.4cm}
+  \vspace{0.45cm}
 
-  % AI修改：日期、作者、标签
-  {\small\color{gray!70}$\bullet$ 2026年6月 \quad $\bullet$ 70asunflower \quad $\bullet$ 模板, 教程}
+  % AI修改：日期、作者、标签；保持分行，避免和 logo 或长标签挤在一起
+  {\small\color{gray!70}$\bullet$ 2026年6月}\par
+  \vspace{0.12cm}
+  {\small\color{gray!70}$\bullet$ 70asunflower}\par
+  \vspace{0.12cm}
+  {\small\color{gray!70}$\bullet$ 模板, 教程}\par
 
-  \vspace{0.6cm}
+  \vspace{0.65cm}
 
   \begin{covercard}
     % AI修改：标题
@@ -250,13 +333,11 @@
 
 \vspace{0.8cm}
 
-% ==================== 目录（罗马数字页码，避免与正文冲突）====================
-\pagenumbering{Roman}
+% ==================== 目录（自动生成，AI无需修改）====================
 \tableofcontents
 
 % ==================== 正文：AI转换规则手册 ====================
 \newpage
-\pagenumbering{arabic}
 \setcounter{page}{2}
 
 \section{封面与元信息}
@@ -518,7 +599,7 @@ Bob & 30 & 研究员 \\
 \vspace{1cm}
 
 \begin{center}
-\textcolor{gray!60}{\small$\star$ 70asunflower \quad $\heartsuit$ 感谢阅读，欢迎交流 \quad $\star$ 全网同名}
+\textcolor{gray!60}{\small$\star$ 70asunflower \quad $\heartsuit$ 感谢阅读，欢迎交流}
 \end{center}
 
 \end{document}

@@ -1,0 +1,4 @@
+# latexmk configuration: force XeLaTeX and enough passes for TOC + page numbers.
+$pdf_mode   = 5;   # 5 = xelatex
+$xelatex    = 'xelatex -interaction=nonstopmode -synctex=1 %O %S';
+$max_repeat = 5;

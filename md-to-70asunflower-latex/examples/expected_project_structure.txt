@@ -1,0 +1,10 @@
+project/
+├── main.tex                         # LaTeX 主文件
+├── source.md                        # 原始 Markdown 副本
+├── compile.bat                      # Windows / MiKTeX 一键编译（自动多遍）
+├── compile.sh                       # Linux / macOS 一键编译
+├── latexmkrc                        # 强制 XeLaTeX + 足够遍数
+├── STATIC_CHECK_REPORT.txt          # 静态检查报告
+├── README.md                        # 编译说明（含“必须编译两遍”提示）
+└── assets/                          # 图片、附件等资源，可选
+    └── figures/

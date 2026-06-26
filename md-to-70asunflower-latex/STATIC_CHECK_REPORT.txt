@@ -1,0 +1,33 @@
+Skill Self-Verification Report
+==============================
+Scanned source files (excluding this report): 9
+
+[Template]
+lines: 606
+real tableofcontents (excluding verb): 1
+custom visual TOC heading: 0
+tocdepth=3: True
+secnumdepth=0: True
+header leftmark only: True
+header bad thesection+leftmark: False
+sectionmark auto-updates header: True
+font profile present: True
+forbidden footer phrase: False
+template env errors: 0 unclosed: 0
+
+[Docs consistency]
+strategy unified (secnumdepth=0 + regular sections): True
+no tocdepth=2 leftover: True
+formula false-positive guard present: True
+conversion verification rules present: True
+compile-vs-static distinction present: True
+
+[Generality - no doc-specific leftovers in source docs]
+  doc-specific term present: False
+  doc-specific term present: False
+  doc-specific term present: False
+  doc-specific term present: False
+  doc-specific term present: False
+  doc-specific term present: False
+  doc-specific term present: False
+  doc-specific term present: True
