@@ -45,6 +45,10 @@ metadata:
         - search
         - notion
         - riji
+        - lifeos
+        - 打卡
+        - 习惯
+        - 活动
       prefixPatterns:
         - "^diary:"
         - "^日记:"

@@ -88,7 +88,22 @@ python scripts/summary.py {monthly|quote}
 
 ## Trigger Rules
 
-**Content types** (prefix → type):
+> **⚠️ FIRST CHECK — OS vs Page routing (MUST check before anything else)**
+
+The two pipelines are **mutually exclusive**. Never let a message fall through from one to the other.
+
+```
+Message arrives
+    ↓
+STEP 0: Starts with "os " (case-insensitive)?
+    → YES: Route to OS Sync (§ below). STOP. Do NOT check page triggers.
+    → NO:  Route to Page Sync (§ below).
+```
+
+**OS Sync** (OS Sync — 8+1 Life OS section) → structured database rows.
+**Page Sync** (rest of this section) → append callout blocks to page.
+
+### Page Sync Triggers (only if NOT "os ")
 - `日记:` / `今天:` / `riji:` / `d` → diary
 - `笔记:` / `学习:` / `note:` / `n` → note
 - `待办:` / `todo:` / `t` → todo
@@ -229,3 +244,146 @@ Same `caption:` pattern works for links:
   - Image only → image (use `record.py image`)
   - Default → idea
 - **Undo**: Use `record.py undo` — respects 5-min batch window, deletes all blocks from last batch.
+
+## OS Sync — 8+1 Life OS
+
+以 `os` 命名空间前缀触发，同步到结构化数据库。**与页面同步互斥，绝不串线。**
+
+### Trigger Detection
+
+消息以 `os `（不区分大小写）开头时，**立即**进入 OS 同步流程。不检查页面触发词。
+
+> ❌ 错误: `i 想法` → OS sync（没 `os` 前缀，走页面）
+> ✅ 正确: `os i 想法 @学习` → OS sync
+> ✅ 正确: `i 想法` → page sync（idea callout）
+> ❌ 错误: `os 月报` → 错误路由到页面 monthly summary（已修复）
+
+**AI 调用的第一条规则**：先检查 `os ` 前缀。命中则 OS sync，没命中才往下看页面触发词。
+
+### OS Commands
+
+```bash
+python scripts/os_entry.py "os l 晨跑5公里 @身体 energy:h duration:30"
+python scripts/os_entry.py "os i 试试Obsidian做知识图谱 @学习 source:ai"
+python scripts/os_entry.py "os h 冥想"
+python scripts/os_entry.py "os 今天"
+```
+
+### Command Routing
+
+| 触发 | 命令 | 目标数据库 | 说明 |
+|------|------|-----------|------|
+| `os l` / `os log` / `os 记录` | 活动记录 | Daily Log | 记录做了什么，可带属性 |
+| `os i` / `os idea` / `os 灵感` | 灵感捕捉 | Idea Inbox | 快速捕捉想法 |
+| `os h` / `os habit` / `os 打卡` | 习惯打卡 | Habit Log | 标记习惯完成 |
+| `os hs` / `os streaks` | 查看 streak | Habits | 更新并显示连续天数 |
+| `os 今天` | 今日摘要 | Daily Log | 查看今日活动 |
+| `os 本周` | 本周汇总 | Daily Log | 近 7 天活动 |
+| `os 桶 @身体` | 桶查询 | Daily Log | 某桶近 14 天记录 |
+| `os 灵感列表` | 灵感列表 | Idea Inbox | 查看未处理灵感 |
+| `os 周报` / `os wr` | 周回顾 | Weekly Review | Agent 生成周报 |
+| `os 月报` / `os mr` | 月复盘 | Periodic Review | Agent 生成月报 |
+
+### Attribute Syntax
+
+用空格分隔的属性语法，AI 通过 `os_parser.py` 自动解析：
+
+| 属性 | 语法 | 示例 |
+|------|------|------|
+| 桶 | `@桶名` | `@身体` `@Learning` `@Body` |
+| 能量 | `energy:h/m/l` | `energy:h` (高/中/低) |
+| 心情 | `mood:great/good/neutral/low/terrible` | `mood:good` |
+| 时长 | `duration:N` | `duration:30` (分钟) |
+| 来源 | `source:xxx` | `source:ai` `source:book` |
+| 紧急度 | `urgency:now/thisweek/later` | `urgency:now` |
+| 备注 | `note:xxx` `备注:xxx` | `note:天气不错` |
+
+**桶名匹配**：支持中英文（`@身体` = `@Body`），不区分大小写。未知桶名会返回可用列表。
+
+### Content vs Notes — 分开存
+
+- **Content（标题）**：一句话「做了什么」，如「写作 320 字」「晨跑 5 公里」。这是列表里显示的那行。
+- **Notes（备注）**：补充细节、感受、对不上选项的原话放这里。如「状态不错，挺有成就感」。
+
+AI 调用时，若消息含描述性文字（超过动作本身），把动作放 Content，其余放 Notes：
+```
+os l 写作320字，状态不错挺有成就感 @学习 energy:h
+→ Content: "写作320字"
+→ Notes: "状态不错，挺有成就感"
+```
+
+### Smart Inference（无显式属性时自动推断）
+
+**Energy 口语映射**：
+- 累 / 没劲 / 困 → `energy:l`
+- 一般 / 还行 / 正常 → `energy:m`
+- 精神好 / 精力充沛 / 有干劲 → `energy:h`
+
+**Mood 口语映射**：
+- 开心 / 有成就感 / 爽 → `mood:good` 或 `mood:great`
+- 一般 / 还行 → `mood:neutral`
+- 烦 / 难受 / 焦虑 / 低能量 → `mood:low` 或 `mood:terrible`
+
+**Bucket 关键词推断**：
+- 跑步 / 健身 / 运动 / 饮食 / 睡眠 → @身体
+- 读书 / 上课 / 论文 / 学习 / 课程 → @学习
+- 工作 / 项目 / 写代码 / 开会 / 赚钱 → @赚钱
+- 家人 / 父母 / 视频通话 → @家庭
+- 朋友 / 聚会 / 社交 → @社交
+- 冥想 / 日记 / 独处 / 正念 → @精神
+- 开源 / 帮助 / 指导 / 公益 → @服务
+- 游戏 / 旅行 / 玩 / 放松 → @玩乐
+
+匹配不到就留空，不回传 bucket 属性。绝不替用户建新桶。
+
+### 多事件拆分
+
+一条消息含多件事时，拆成多条 `os l` 命令分别调用：
+
+```
+os l 晨跑5公里 @身体 energy:h duration:30
+os l 写代码3小时 @赚钱 energy:m duration:180
+os l 晚上和爸妈视频 @家庭
+```
+
+### 大小写规则（Notion API 敏感）
+
+所有属性名和 select 值必须精确大小写：
+- `Energy`: High / Medium / Low（不是 high）
+- `Mood`: Great / Good / Neutral / Low / Terrible（不是 good）
+- Daily Log 属性名: `Content, Date, Energy, Duration_min, Bucket, Adventure, Mood, Notes`
+- 公式/rollup 字段（`OverallScore`, `TotalCompletions`, `Avg_*`）绝不要写
+- `Place` 字段跳过，不要写
+
+### 短记录 vs 长日记（路由）
+
+- `os l` 或无前缀且短 → 建 Daily Log 行（结构化属性）
+- `日记:` 或明显长篇/情绪流 → 走原有页面同步（append callout blocks）
+
+### AI 调用流程
+
+1. 检测用户消息以 `os ` 开头
+2. **智能推断**（消息无显式属性时）：
+   - 扫描关键词推断 bucket（跑步 → @身体）
+   - 扫描情绪词推断 energy/mood（累 → energy:l；开心 → mood:good）
+   - 提取时长（一小时 → duration:60）
+3. **拆解 Content vs Notes**：
+   - 把「动作」放 Content（「晨跑5公里」）
+   - 把「感受/细节」放 Notes（「状态不错，呼吸顺畅」）
+4. 构建完整 os 命令（带推断出的属性），调用 `python scripts/os_entry.py "完整消息"`
+5. 解析输出：`OK|...` / `INFO|...` / `ERROR|...`
+6. **不需要** `.pending_content.txt` 文件（OS 直接传参）
+
+### OS vs Page Sync — 严格互斥（MUST）
+
+两个管道**绝不串线**。`os ` 开头 → OS 同步，否则 → 页面同步。没有歧义、没有回退、没有"两者都试试"。
+
+| 消息 | 正确管道 | 错误管道 |
+|------|---------|---------|
+| `os l 晨跑 @身体` | OS → Daily Log 行 | — |
+| `os i 灵感 @学习` | OS → Idea Inbox 行 | — |
+| `i 随便一个想法` | Page → idea callout | ❌ 别走 OS |
+| `想法: 好主意` | Page → idea callout | ❌ 别走 OS（没 `os` 前缀） |
+| `日记: 今天好累` | Page → diary callout | ❌ 别走 OS |
+| `月报` | Page → monthly summary | ❌ 别走 OS（`os 月报` 才对） |
+| `os 月报` | OS → 数据库聚合 | ✅ |

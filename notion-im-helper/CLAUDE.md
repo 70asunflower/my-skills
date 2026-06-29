@@ -10,6 +10,8 @@ NOTION_PARENT_PAGE_ID
 
 ## Content Type Triggers
 
+> **FIRST: Check for `os ` prefix.** If message starts with `os ` (case-insensitive), route to OS Sync. Do NOT process page triggers. The two pipelines are mutually exclusive.
+
 Check the user message against these patterns:
 
 ### Prefix Patterns (check first)
@@ -117,3 +119,113 @@ Scripts emit standardized prefixes. Never modify the raw output — relay the me
 - NEVER expose API keys or error stack traces
 - Always return friendly messages
 - For batch operations (multiple lines), execute a single append call
+
+## OS Sync — 8+1 Life OS
+
+**CRITICAL: OS and Page sync are MUTUALLY EXCLUSIVE.** Check `os ` prefix FIRST, before any page trigger.
+
+- `os ` at start → OS sync. STOP. Never check page triggers.
+- No `os ` → Page sync. Never route to OS.
+
+Examples of WRONG routing that MUST be avoided:
+- `i 想法` → ❌ do NOT route to OS (no `os ` prefix)
+- `os i 想法 @学习` → ✅ OS Idea Inbox
+- `月报` → ❌ do NOT route to OS (use `os 月报` for that)
+- `os 月报` → ✅ OS monthly review
+
+When the user message starts with `os `, route to the OS sync pipeline. Never fall through to page sync.
+
+### Execution
+
+```bash
+python scripts/os_entry.py "完整消息"
+```
+
+### Command Detection
+
+Check the first token after `os`:
+
+**Write commands:**
+- `os l` / `os log` / `os 记录` + content + attributes → Daily Log
+- `os i` / `os idea` / `os 灵感` + content + attributes → Idea Inbox
+- `os h` / `os habit` / `os 打卡` + habit name → Habit Log
+
+**Read commands:**
+- `os 今天` → today's activities
+- `os 本周` [@桶] → last 7 days
+- `os 桶 @桶名` → last 14 days for bucket
+- `os 灵感列表` → idea inbox
+- `os hs` / `os streaks` → habit streaks
+
+**Review commands:**
+- `os 周报` / `os wr` → weekly review
+- `os 月报` / `os mr` → monthly review
+
+### Attribute Syntax
+
+- `@桶名` → bucket (Chinese or English, case-insensitive)
+- `energy:h/m/l` → energy level (High/Medium/Low)
+- `duration:N` → duration in minutes
+- `source:xxx` → idea source (ai/book/podcast/...)
+- `urgency:now/thisweek/later` → idea urgency
+- `note:xxx` / `备注:xxx` → notes
+- `mood:great/good/neutral/low/terrible` → mood
+
+### Content vs Notes
+
+- **Content** = concise action summary ("晨跑5公里", "写作320字")
+- **Notes** = details, feelings, anything that doesn't fit a field
+- If user message has both action + feelings, split accordingly
+
+### Smart Inference (when no explicit attributes)
+
+**Bucket keywords:**
+- 跑步/健身/运动/饮食/睡眠 → @身体
+- 读书/上课/论文/学习 → @学习
+- 工作/写代码/项目 → @赚钱
+- 家人/父母 → @家庭; 朋友/聚会 → @社交
+- 冥想/正念 → @精神; 游戏/旅行/玩 → @玩乐
+- No match → leave Bucket empty, do NOT create new buckets
+
+**Energy/Mood colloquial:**
+- 累/没劲 → energy:l; 一般 → energy:m; 精神好 → energy:h
+- 开心/有成就感 → mood:good; 烦/难受 → mood:low
+
+**Duration extraction:** "一小时"→60, "半小时"→30, "两小时"→120
+
+### Multi-Event Splitting
+
+One message with multiple activities → separate `os l` calls for each.
+
+### Case Sensitivity (CRITICAL)
+
+Notion API is case-sensitive. Always use exact forms:
+- Property names: `Content, Date, Energy, Duration_min, Bucket, Adventure, Mood, Notes`
+- Energy values: `High, Medium, Low` (never lowercase)
+- Mood values: `Great, Good, Neutral, Low, Terrible` (never lowercase)
+- Skip: `Place` (unsupported), formula/rollup fields (`TotalCompletions`, `OverallScore`, `Avg_*`)
+
+### Short Record vs Long Diary
+
+- `os l` / short content → Daily Log row (structured)
+- `日记:` / long emotional text → page append (callout blocks)
+
+### Output Protocol
+
+Same prefixes as page sync:
+- `OK|...` → success
+- `INFO|...` → info
+- `ERROR|...` → error (display message after |)
+
+### OS vs Page — Strict separation
+
+These pipelines NEVER mix. Check `os ` first. If not `os `, use page sync. No exceptions, no fallback.
+
+| Input | Correct | Wrong |
+|-------|---------|-------|
+| `os l 晨跑 @身体` | OS Daily Log | — |
+| `os i 灵感 @学习` | OS Idea Inbox | — |
+| `i 想法` | Page callout | ❌ don't route to OS |
+| `想法: 好主意` | Page callout | ❌ no `os ` prefix |
+| `月报` | Page monthly | ❌ don't route to OS |
+| `os 月报` | OS monthly review | — |

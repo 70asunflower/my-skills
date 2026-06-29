@@ -138,7 +138,7 @@ def cmd_image(args):
         blocks.append(build_divider())
 
     # Build image block using build_blocks_for_type which handles upload
-    image_blocks = build_blocks_for_type("image", path)
+    image_blocks = build_blocks_for_type("image", path, image_caption=args.caption)
     blocks.extend(image_blocks)
 
     if blocks:

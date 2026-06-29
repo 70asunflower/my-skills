@@ -1,0 +1,24 @@
+{
+  "root_page_id": "d0f294df-130c-8381-b992-81aa719b8cab",
+  "databases": {
+    "buckets": "6b1294df-130c-8209-8352-81eb3afe0df0",
+    "daily_log": "573294df-130c-82b1-9136-8183168b0cac",
+    "weekly_review": "af3294df-130c-8221-9494-81444203d502",
+    "adventures": "ab0294df-130c-827c-a4d9-017735b0d414",
+    "ideas": "b66294df-130c-8286-9adc-81efa8b2b646",
+    "habits": "479294df-130c-82d8-9d79-81796d531d13",
+    "habit_log": "92d294df-130c-82c8-86e0-81d820c80cc3",
+    "periodic_review": "ca0294df-130c-835e-b2a7-0192e7fb3097"
+  },
+  "bucket_page_ids": {
+    "赚钱 Earning": "fd9294df-130c-83b5-882a-813e39a9e0bb",
+    "学习 Learning": "b9a294df-130c-8398-b223-8139a2358ad1",
+    "身体 Body": "b46294df-130c-822a-a573-814817401f62",
+    "家庭 Family": "2f0294df-130c-83fe-b4ef-014f7dba1bc3",
+    "社交 Social": "b9c294df-130c-82ec-aa23-01116310a0d5",
+    "精神 Spiritual": "9ef294df-130c-8399-af50-0105772ce66a",
+    "服务 Service": "750294df-130c-83f0-ba61-01d0485b560e",
+    "玩乐 Play": "564294df-130c-82f5-8ad3-81d020703385",
+    "冒险 Adventure": "5c1294df-130c-833f-a40b-0141490a9ece"
+  }
+}

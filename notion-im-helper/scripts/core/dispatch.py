@@ -102,7 +102,7 @@ def is_image_url(s):
     return s.lower().split('?')[0].endswith(image_extensions)
 
 
-def build_blocks_for_type(record_type, content):
+def build_blocks_for_type(record_type, content, image_caption=None):
     """Build Notion blocks for a given type and content."""
     cfg = TYPE_CONFIG.get(record_type, TYPE_CONFIG["idea"])
 
@@ -145,7 +145,7 @@ def build_blocks_for_type(record_type, content):
     if record_type == "image":
         path = content.strip()
         if is_image_url(path):
-            return [build_image_block_external(path)]
+            return [build_image_block_external(path, caption=image_caption)]
         if is_local_file_path(path):
             path = os.path.expanduser(path)
             if not os.path.isfile(path):
@@ -158,10 +158,10 @@ def build_blocks_for_type(record_type, content):
             if not file_id:
                 print("ERROR| 图片上传失败")
                 return []
-            return [build_image_block(file_id)]
+            return [build_image_block(file_id, caption=image_caption)]
         if not path.startswith("http"):
             path = f"https://{path}"
-        return [build_image_block_external(path)]
+        return [build_image_block_external(path, caption=image_caption)]
 
     if record_type in ("idea", "diary", "note", "question", "quote"):
         clean_text, tags, project = parse_metadata(content)
