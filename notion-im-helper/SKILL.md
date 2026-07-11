@@ -16,8 +16,9 @@ description: Sync IM messages to Notion via Notion API. Supports 7 content types
 ## Setup
 
 1. `pip install notion-client`
-2. Set env vars: `NOTION_API_KEY` and `NOTION_PARENT_PAGE_ID`
-3. Authorize integration on Notion page (··· > Connect to)
+2. Set config in `P:/my_project/.notion_env` (see Configuration & Resilience below) — do NOT rely on C: environment variables alone, they are wiped on system reset.
+3. For image uploads, `notion-upload` must be installed in the dedicated venv (auto-handled by `record.py image`, see below).
+4. Authorize integration on Notion page (··· > Connections).
 
 ## Directory Structure
 
@@ -43,9 +44,13 @@ You can sync to multiple Notion pages by configuring named pages in `scripts/pag
 
 ```json
 {
+  "2026": {
+    "page_id": "2db294df-130c-80e2-a3e1-e7769f933786",
+    "description": "2026 年度页（默认同步目标）"
+  },
   "lifeos": {
-    "page_id": "372294df130c81d4b3cae4dd797d924b",
-    "description": "8+1 Life OS"
+    "page_id": "d0f294df-130c-8381-b992-81aa719b8cab",
+    "description": "8+1 Life OS（用 --page lifeos 指定）"
   },
   "work": {
     "page_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -64,6 +69,18 @@ python scripts/record.py undo --page lifeos
 Without `--page`, defaults to `NOTION_PARENT_PAGE_ID`.
 
 **For AI callers**: If user says "notion lifeos 日记:" or mentions "lifeos" page, add `--page lifeos`. Otherwise omit `--page` for the default page.
+
+## Configuration & Resilience
+
+- **Config file (survives system resets)**: `P:/my_project/.notion_env` — keep secrets here, NOT only in C: environment variables (a Windows reset wipes C:).
+  ```
+  NOTION_API_KEY=ntn_xxxxx
+  NOTION_PARENT_PAGE_ID=2db294df-130c-80e2-a3e1-e7769f933786   # 2026 annual page (default sync target)
+  NOTION_QUOTES_PAGE_ID=...   # optional
+  ```
+- The client resolves config in this order: environment variable → Windows registry → `P:/my_project/.notion_env` (first match wins).
+- **Default sync page is `2026`** (`2db294df-130c-80e2-a3e1-e7769f933786`). Use `--page lifeos` to target the 8+1 Life OS page.
+- **Image uploads require `notion-upload`**, installed in a dedicated venv at `C:\Users\Nesp\.workbuddy\binaries\python\envs\notion\`. `record.py image` **auto re-execs under that venv** if the library is missing from the current interpreter — so plain `python scripts/record.py image ...` just works. Do not manually switch interpreters.
 
 ## Usage
 
@@ -113,7 +130,7 @@ STEP 0: Starts with "os " (case-insensitive)?
 - `摘抄:` / `quote:` / `qu:` / `z` → quote
 - `链接:` / `link:` / `url:` / `l` → link
 - `图片:` / `photo:` / `img:` / `p` → image
-- `caption:` / `说明:` / `补:` → caption (append to last entry)
+- `caption:` / `说明:` / `补:` → image caption (text becomes caption of the co-sent image; always used with an image)
 
 **Formats:**
 - `* text` → H1 heading
@@ -138,29 +155,21 @@ STEP 0: Starts with "os " (case-insensitive)?
 - Contains `[ ]` or `【 】` → todo
 - Default → idea
 
-**Caption — two distinct uses:**
+**Caption — routing rule (IMPORTANT, corrected 2026-07-11):**
 
-`caption:` / `说明:` / `补:` has **two different behaviors** depending on context:
+`caption:` / `说明:` / `补:` is **ALWAYS used together with an image in the same message** for this user. There is **no standalone "caption without image" case** — do NOT use `record.py caption` (which appends to the last callout); that path is NOT used here.
 
-### 1. Caption Append (standalone — no image/link in message)
+- The text after `caption:` becomes the **image's caption**, uploaded via `record.py image --caption "text" "path"`.
+- If the message also has preceding text (before `caption:`), that text is synced as a normal callout (diary/idea), and only the caption text goes on the image (see Image + Text Sync Rules below).
+- Strip any `@image#N:...` / `wechatmp-img-...` markers from the caption text before passing it.
 
-When the user sends `caption:` as the **primary prefix** of a message with **no images or links**, it appends gray-colored paragraphs inside the last callout block:
-
-- `caption: 补充一个角度` → appends "补充一个角度" as a gray paragraph inside the last callout
-- `说明: 这个想法还有一个延伸` → same behavior
-- `补: 对了还有一点` → same behavior
-
-**Implementation**: Write content to `.pending_content.txt`, then run `python scripts/record.py caption`.
-
-**Visual**: Gray-colored paragraphs inside the callout, visually distinct from the main content. No `↳` prefix.
-
-### 2. Caption Separator (with image/link in message)
-
-When the message **contains images or links**, `caption:` acts as a **separator** between diary content and image/link caption:
-- `OPPO园区很好 caption: 园区环境` + 3 images → last image gets caption "园区环境", diary "OPPO园区很好" synced separately
-- Without `caption:`, all text is diary/idea content, no caption on images
-
-**IMPORTANT**: The AI must check whether the message contains images or links to determine which caption behavior to use.
+**Implementation**:
+```bash
+# recommended: explicit venv (fastest)
+C:\Users\Nesp\.workbuddy\binaries\python\envs\notion\Scripts\python.exe scripts/record.py image --caption "caption文字" "图片路径"
+# also works: default python auto re-execs under the venv if notion-upload is missing
+python scripts/record.py image --caption "caption文字" "图片路径"
+```
 
 ## Metadata
 
