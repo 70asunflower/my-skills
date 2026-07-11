@@ -14,8 +14,35 @@ BATCH_FILE = os.path.join(SCRIPT_DIR, ".pending_batch.json")
 PAGES_CONFIG_FILE = os.path.join(SCRIPT_DIR, "user", "pages.json")
 BATCH_TTL_SECONDS = 300  # 5 minutes
 
+# Non-C drive .env fallback (survives system resets that wipe C:)
+_ENV_FILE_CANDIDATES = [
+    "P:/my_project/.notion_env",
+    os.path.join(SCRIPT_DIR, ".notion_env"),
+]
+
+def _load_env_file():
+    """Load KEY=VALUE pairs from the first existing .notion_env candidate."""
+    env = {}
+    for path in _ENV_FILE_CANDIDATES:
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    k, v = line.split("=", 1)
+                    env[k.strip()] = v.strip().strip('"').strip("'")
+        except Exception:
+            pass
+        break  # only load the first found file
+    return env
+
+_ENV_FILE = _load_env_file()
+
 def _get_env(name):
-    """Get env var, falling back to Windows user-level registry on Windows."""
+    """Get env var, falling back to Windows registry, then non-C drive .env file."""
     val = os.environ.get(name, "")
     if val:
         return val
@@ -33,7 +60,7 @@ def _get_env(name):
             return val or ""
         except Exception:
             pass
-    return ""
+    return _ENV_FILE.get(name, "")
 
 API_KEY = _get_env("NOTION_API_KEY")
 PAGE_ID = _get_env("NOTION_PARENT_PAGE_ID")
