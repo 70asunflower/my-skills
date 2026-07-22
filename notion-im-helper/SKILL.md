@@ -96,7 +96,7 @@ python scripts/record.py list --kind {bullet|number} "{items}"
 python scripts/record.py toggle "{json}"
 python scripts/record.py image [--caption "text"] "{file_path_or_url}"
 python scripts/record.py image --page {name} [--caption "text"] "{file_path_or_url}"
-python scripts/record.py caption "{content_to_append}"
+python scripts/record.py caption "{content_to_append}"     # (unused — caption always attached to image via --caption)
 python scripts/record.py undo
 python scripts/check_config.py
 python scripts/search_notes.py "{keyword}"
@@ -165,11 +165,18 @@ STEP 0: Starts with "os " (case-insensitive)?
 
 **Implementation**:
 ```bash
-# recommended: explicit venv (fastest)
-C:\Users\Nesp\.workbuddy\binaries\python\envs\notion\Scripts\python.exe scripts/record.py image --caption "caption文字" "图片路径"
-# also works: default python auto re-execs under the venv if notion-upload is missing
 python scripts/record.py image --caption "caption文字" "图片路径"
 ```
+
+**Caption attachment reference** (verified via API, 2026-07-22):
+
+| Block type | Supports caption? | How to attach |
+|------------|-------------------|---------------|
+| Image | ✅ Yes (API accepts despite official docs showing no) | `--caption` on `record.py image` |
+| Bookmark | ✅ Yes | `--caption` on `record.py record --type link` (auto-extracts) |
+| File | ✅ Yes | via API directly |
+| Code | ✅ Yes | via API directly |
+| Callout (💡/📒) | ❌ No | Notion API has no caption field on callout blocks |
 
 ## Metadata
 
@@ -247,7 +254,7 @@ Same `caption:` pattern works for links:
   - **⚠️ CRITICAL — File path**: Write to `C:\Users\Nesp\.workbuddy\skills\notion-im-helper\scripts\.pending_content.txt` (the scripts directory, NOT the workspace directory). The script reads from its own directory, so writing to the workspace root will result in empty content.
 - **Image passing**: Pass image file path or URL directly as command-line argument to `record.py image`. Do NOT copy to `.pending_image.jpg` — that file is only used internally for cleanup.
 - **Type inference**: If user says "notion" or "同步" without specifying type, infer from content:
-  - Starts with `caption:` / `说明:` / `补:` → caption (append to last entry)
+  - Starts with `caption:` / `说明:` / `补:` → image caption (must be paired with image; use `record.py image --caption`)
   - Contains "日记"/"今天" → diary
   - Contains URL → link
   - Image only → image (use `record.py image`)

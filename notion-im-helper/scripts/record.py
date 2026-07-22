@@ -161,8 +161,16 @@ def cmd_image(args):
     if check_need_day_separator():
         blocks.append(build_divider())
 
+    # Resolve caption: --caption argument takes priority, fall back to
+    # .pending_content.txt for long captions (avoids shell escaping issues).
+    caption = args.caption
+    if caption is None and os.path.exists(PENDING_CONTENT_FILE):
+        with open(PENDING_CONTENT_FILE, "r", encoding="utf-8") as f:
+            caption = f.read().strip()
+        os.remove(PENDING_CONTENT_FILE)
+
     # Build image block using build_blocks_for_type which handles upload
-    image_blocks = build_blocks_for_type("image", path, image_caption=args.caption)
+    image_blocks = build_blocks_for_type("image", path, image_caption=caption)
     blocks.extend(image_blocks)
 
     if blocks:
