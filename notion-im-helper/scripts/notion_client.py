@@ -1,5 +1,6 @@
 """Notion API wrapper - shared client for all record operations."""
 import os
+import re
 import sys
 import json
 import urllib.request
@@ -289,49 +290,130 @@ def check_config():
     return {"ok": True, "message": ""}
 
 
+UPLOAD_ENDPOINT = "https://api.notion.com/v1/file_uploads"
+UPLOAD_API_VERSION = "2025-09-03"
+UPLOAD_MAX_BYTES = 5242880  # Notion single-part upload limit (5 MB)
+
+
+def _upload_headers(has_json_body=True):
+    """Headers for the File Upload API (needs a newer Notion-Version)."""
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Notion-Version": UPLOAD_API_VERSION,
+    }
+    if has_json_body:
+        headers["Content-Type"] = "application/json"
+    return headers
+
+
+def _ascii_filename(name):
+    """ASCII-safe filename for the multipart part, keeping the extension.
+
+    The real (possibly non-ASCII) name is already sent in the create-upload
+    JSON, so only this header needs to stay ASCII-clean.
+    """
+    stem, ext = os.path.splitext(name)
+    safe_stem = re.sub(r"[^A-Za-z0-9._-]", "_", stem) or "file"
+    return safe_stem + re.sub(r"[^A-Za-z0-9.]", "", ext)
+
+
 def upload_file(file_path):
-    """Upload a local file to Notion via File Upload API.
+    """Upload a local file to Notion via the File Upload API (stdlib only).
 
-    Uses the notion-upload library to upload a file, then returns the file_id
-    which can be used with image/file blocks using type "file_upload".
+    Two steps, no third-party dependency:
+      1. POST /v1/file_uploads            -> file_upload id + upload_url
+      2. POST <upload_url> (multipart)    -> the file bytes
 
-    Includes a small delay after upload to avoid rate limits when uploading
-    multiple images in quick succession.
+    The returned file_upload ID is used by image/file blocks with
+    type "file_upload".
 
     Args:
-        file_path: Absolute path to the local file.
+        file_path: Absolute path to a local file.
 
     Returns:
         The Notion file_upload ID string on success, None on failure.
     """
-    try:
-        from notion_upload import notion_upload as nu
-    except ImportError:
-        print("ERROR| notion-upload 库未安装，请运行: pip install notion-upload")
-        return None
+    import mimetypes
+    import time
+    import uuid
 
     if not API_KEY:
         print("ERROR|AUTH")
         return None
 
-    file_name = os.path.basename(file_path)
-    try:
-        uploader = nu(file_path, file_name, API_KEY, enforce_max_size=True)
-        file_id = uploader.upload()
-        if file_id:
-            # Small delay to avoid rate limit on rapid successive uploads
-            import time
-            time.sleep(0.5)
-            return file_id
-        else:
-            print("ERROR| 图片上传失败: 未返回 file_id")
-            return None
-    except FileNotFoundError:
+    if not os.path.isfile(file_path):
         print(f"ERROR| 文件不存在: {file_path}")
+        return None
+
+    file_size = os.path.getsize(file_path)
+    if file_size > UPLOAD_MAX_BYTES:
+        print(
+            f"ERROR| 文件 {file_size / 1024 / 1024:.1f}MB 超过 Notion 单次上传上限 "
+            f"{UPLOAD_MAX_BYTES / 1024 / 1024:.0f}MB"
+        )
+        return None
+
+    file_name = os.path.basename(file_path)
+    mime_type = mimetypes.guess_type(file_path)[0] or "application/octet-stream"
+
+    # Step 1: create the upload session.
+    try:
+        req = urllib.request.Request(
+            UPLOAD_ENDPOINT,
+            data=json.dumps({"filename": file_name, "content_type": mime_type}).encode(),
+            headers=_upload_headers(),
+            method="POST",
+        )
+        with urllib.request.urlopen(req) as resp:
+            created = json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode(errors="replace")[:200]
+        print(f"ERROR| 上传初始化失败: HTTP {e.code} {detail}")
+        return None
+    except Exception as e:
+        print(f"ERROR| 上传初始化失败: {e}")
+        return None
+
+    file_id = created.get("id")
+    if not file_id:
+        print("ERROR| 上传初始化未返回 file_id")
+        return None
+    send_url = created.get("upload_url") or f"{UPLOAD_ENDPOINT}/{file_id}/send"
+
+    # Step 2: send the bytes as multipart/form-data (single part named "file").
+    boundary = "----NotionUpload" + uuid.uuid4().hex
+    with open(file_path, "rb") as f:
+        payload = f.read()
+    body = b"".join(
+        [
+            f"--{boundary}\r\n".encode(),
+            (
+                'Content-Disposition: form-data; name="file"; filename="'
+                f'{_ascii_filename(file_name)}"\r\n'
+            ).encode(),
+            f"Content-Type: {mime_type}\r\n\r\n".encode(),
+            payload,
+            f"\r\n--{boundary}--\r\n".encode(),
+        ]
+    )
+    headers = _upload_headers(has_json_body=False)
+    headers["Content-Type"] = f"multipart/form-data; boundary={boundary}"
+
+    try:
+        req = urllib.request.Request(send_url, data=body, headers=headers, method="POST")
+        with urllib.request.urlopen(req) as resp:
+            resp.read()
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode(errors="replace")[:200]
+        print(f"ERROR| 图片上传失败: HTTP {e.code} {detail}")
         return None
     except Exception as e:
         print(f"ERROR| 图片上传失败: {e}")
         return None
+
+    # Small delay to avoid rate limits on rapid successive uploads.
+    time.sleep(0.5)
+    return file_id
 
 
 def get_last_callout_block():

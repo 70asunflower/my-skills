@@ -15,10 +15,9 @@ description: Sync IM messages to Notion via Notion API. Supports 7 content types
 
 ## Setup
 
-1. `pip install notion-client`
+1. **No third-party dependencies** — everything (API calls *and* image uploads) is implemented with the Python standard library (`urllib`). No `pip install` needed.
 2. Set config in `P:/my_project/.notion_env` (see Configuration & Resilience below) — do NOT rely on C: environment variables alone, they are wiped on system reset.
-3. For image uploads, `notion-upload` must be installed in the dedicated venv (auto-handled by `record.py image`, see below).
-4. Authorize integration on Notion page (··· > Connections).
+3. Authorize integration on Notion page (··· > Connections).
 
 ## Directory Structure
 
@@ -80,7 +79,7 @@ Without `--page`, defaults to `NOTION_PARENT_PAGE_ID`.
   ```
 - The client resolves config in this order: environment variable → Windows registry → `P:/my_project/.notion_env` (first match wins).
 - **Default sync page is `2026`** (`2db294df-130c-80e2-a3e1-e7769f933786`). Use `--page lifeos` to target the 8+1 Life OS page.
-- **Image uploads require `notion-upload`**, installed in a dedicated venv at `C:\Users\Nesp\.workbuddy\binaries\python\envs\notion\`. `record.py image` **auto re-execs under that venv** if the library is missing from the current interpreter — so plain `python scripts/record.py image ...` just works. Do not manually switch interpreters.
+- **Image uploads need no extra library.** `notion_client.upload_file()` implements Notion's File Upload API directly with `urllib` (create upload session → send bytes as multipart). It runs on whatever interpreter invokes `record.py`; there is no dedicated venv and nothing on C: to lose on a system reset.
 
 ## Usage
 

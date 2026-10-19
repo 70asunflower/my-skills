@@ -35,30 +35,6 @@ PENDING_CONTENT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
 PENDING_IMAGE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".pending_image.jpg")
 
 
-# ---- Image upload dependency auto-resolution ----
-# notion-upload lives in a dedicated venv (non-C drive, survives system resets).
-# If the current interpreter lacks it, re-exec the image command under the venv python.
-_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-_VENV_PYTHON_CANDIDATES = [
-    r"C:\Users\Nesp\.workbuddy\binaries\python\envs\notion\Scripts\python.exe",
-    os.path.normpath(os.path.join(_SCRIPT_DIR, "..", "..", "..",
-        "binaries", "python", "envs", "notion", "Scripts", "python.exe")),
-]
-
-def _can_import_notion_upload():
-    try:
-        import notion_upload  # noqa: F401
-        return True
-    except ImportError:
-        return False
-
-def _find_venv_python():
-    for c in _VENV_PYTHON_CANDIDATES:
-        if os.path.exists(c):
-            return c
-    return None
-
-
 # ---- Command handlers ----
 
 def cmd_record(args):
@@ -285,15 +261,6 @@ def main():
     if not args.command:
         parser.print_help()
         return
-
-    # Auto re-exec under venv python for image uploads if notion-upload is missing
-    if args.command == "image" and not _can_import_notion_upload():
-        venv_py = _find_venv_python()
-        if venv_py:
-            import subprocess
-            result = subprocess.run([venv_py, os.path.abspath(__file__)] + sys.argv[1:])
-            sys.exit(result.returncode)
-        # else: fall through to cmd_image which emits the install error
 
     try:
         args.func(args)

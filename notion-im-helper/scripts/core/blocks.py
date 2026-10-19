@@ -140,8 +140,8 @@ def build_toggle(text, children=None):
 def build_image_block(file_upload_id, caption=None):
     """Build an image block using a file_upload ID from Notion's File Upload API.
 
-    After uploading a file via notion-upload, the returned file_id is used
-    with type "file_upload" to attach the image to a block.
+    After uploading a file via notion_client.upload_file(), the returned file_id
+    is used with type "file_upload" to attach the image to a block.
     """
     image_data = {
         "type": "file_upload",

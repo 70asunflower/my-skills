@@ -13,9 +13,9 @@ metadata:
       optional:
         - NOTION_QUOTES_PAGE_ID
     install:
-      - id: python-deps
+      - id: no-deps
         kind: note
-        label: "pip install notion-client"
+        label: "无需第三方依赖（纯标准库 urllib，含图片上传）"
     primaryEnv: NOTION_API_KEY
     trigger:
       keywords:
