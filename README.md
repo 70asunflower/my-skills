@@ -17,7 +17,7 @@
 | [ai-tutorial-pipeline](./ai-tutorial-pipeline/) | 用网页版 AI 按大纲逐章生成高质量教程并自动入库思源笔记，含浏览器接管、表格/公式格式校验 |
 | [doc-plain-zh](./doc-plain-zh/) | 中文文档可读性转换：拗口 → 通顺，只改表达、不改逻辑与事实，保持书面正式 |
 | [jetson-thor-mem-diag](./jetson-thor-mem-diag/) | Jetson AGX Thor（Blackwell 统一内存）"内存被占满却查不到进程"的诊断与回收手册 |
-| [paper-figures](./paper-figures/) | 学术图表统一入口：matplotlib 投稿矢量图 / Origin 可编辑直通 / python-pptx 示意图，三条管线按用途路由 |
+| [paper-figures](./paper-figures/) | 学术图表统一入口：matplotlib 投稿矢量图 / Origin 可编辑直通 / python-pptx 示意图三条管线按用途路由；含期刊海报与图文摘要模板、色盲安全检查、视觉一致性校验 |
 | [project-init](./project-init/) | 项目初始化 + 多 agent 规范生成（AGENTS.md + 7 个 agent 入口）+ 巡检修复器 |
 | [project-review](./project-review/) | 项目六维审查评分 + 审计报告，与 project-init 互补 |
 | [siyuan-backup-sync](./siyuan-backup-sync/) | 思源笔记数据仓库的 Git 备份/同步工作流 |
