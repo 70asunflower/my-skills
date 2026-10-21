@@ -3,7 +3,7 @@ name: siyuan-kernel-ops
 description: Safely search, read, create, edit, move, and batch-process a local SiYuan knowledge base from WorkBuddy through SiYuan's Kernel HTTP API. Use when the user mentions SiYuan/思源笔记, notebooks, documents, blocks, backlinks, attributes, SQL/full-text search, daily notes, or asks WorkBuddy to organize or write back knowledge. Prefer block-level, idempotent edits; protect block IDs, references, assets, and user data.
 compatibility: WorkBuddy on Windows with Python 3 and local access to a running SiYuan desktop/kernel. The default workspace config is D:\MyData\Warehouse\siyuan-backup\conf\conf.json; SIYUAN_URL, SIYUAN_TOKEN, and SIYUAN_CONF may override it.
 metadata:
-  version: "2.3.0"
+  version: "2.4.0"
   target: "WorkBuddy + SiYuan"
 ---
 
@@ -369,7 +369,7 @@ Do not over-index on block-graph theory for a Markdown-authoring user; the Markd
 
 When an endpoint is unavailable in the installed SiYuan version, inspect that version's official API/CLI help and choose the closest documented endpoint. Do not guess request fields or fall back to direct data-file mutation.
 
-## 12. Known kernel quirks (verified on v3.8.0 — running instance confirmed 3.8.0, the latest release as of 2026-08-13; new v3.8.0 capabilities documented in §13.6–13.8 — cost real debugging, save these)
+## 12. Known kernel quirks (v3.8.0-era findings §12.1–12.11; re-verified live on **v3.8.7** 2026-10-21 — upgrade-specific changes in §12.12; v3.8.0 capabilities in §13.6–13.8 — cost real debugging, save these)
 
 ### 12.1 `updateBlock(rootId, dataType:"markdown")` MERGES, it does not replace
 When you call `updateBlock` on a document **root** with markdown, SiYuan **merges** the new markdown into the existing child-block tree. Old child blocks (e.g. stale copies carrying zero-width chars or a duplicate title) **survive** the write. Symptoms: `code==0` returns, the re-export looks unchanged, and a second `getChildBlocks` shows BOTH old + new blocks co-existing.
@@ -473,6 +473,21 @@ Verified 2026-08-13: calling `/api/filetree/createDocWithMd` with a `path` whose
 
 **Fix:** strip `/` from any human-readable title (use `与` / `&` / ` ` / `／` instead), and ensure the `path` argument you build has no `/` inside the final segment. If you already created the nested pair, remove both with `removeDocByID` and recreate with a `/`-free title.
 
+### 12.12 v3.8.7 upgrade verification (2026-10-21) — endpoint changes, callout delete trap, `.sy` v3 format
+
+Instance upgraded v3.8.0 → **v3.8.7**. Live smoke test against the running kernel:
+
+- **`/api/filetree/getChildBlocks` → 404.** The child-blocks endpoint is **`/api/block/getChildBlocks`** (agents keep guessing the filetree path — don't).
+- **`/api/filetree/getDocInfo` → 404.** Use `/api/filetree/getHPathByID` (human path) + `/api/block/getBlockInfo` (type/parent) instead.
+- **`/api/filetree/listDocsByPath` now requires `notebook`** (`code:-1 Field [notebook] is required`): send `{"notebook": NBID, "path": "/..."}`. `getIDsByHPath` takes `notebook` too and works.
+- Re-confirmed working on v3.8.7: `block/getChildBlocks`, `block/getBlockKramdown`, `block/getBlockInfo`, `export/exportMdContent`, `query/sql`, `asset/upload` (multipart field **`file[]`**), `ui/reloadUI`, `system/version`.
+
+**Callout/superblock delete trap (caused real data loss 2026-10-21, recovered from `history/`):** `getChildBlocks` returns a callout/superblock's `markdown` **including all nested children's content**. Matching a top-level block by an asset-filename/content substring can therefore hit the *container*, and `deleteBlock` on it wipes the user's entire pasted article. **Rule: before any `deleteBlock`, assert the target's `type` is a leaf (`p`/`t`/`l`/`h`/`c`/`m`); container blocks (`b`/callout) may only be replaced wholesale via `updateBlock`, and only after exporting a backup.**
+
+**`.sy` v3 format (new builds) — for read-only disaster recovery only (§8 still forbids writing `.sy`):** nodes use capitalized keys — `{ID, Type, Properties, Children}`. Text lives in `NodeText.Data`, `NodeTextMark.TextMarkTextContent`, inline math in `TextMarkInlineMathContent`; `TextMarkType` can be compound (`"strong inline-math"` — split on space, wrap per token). A callout is `NodeCallout` (`CalloutType`/`CalloutTitle`); its kramdown form is a `> ` blockquote whose first line is `> [!NOTE]`. History snapshots live at `<workspace>/history/<ts>-update|delete/<nb>/.../<doc>.sy` (~10-min cadence); rebuilding kramdown from a snapshot and re-inserting it **with the original `{: id=...}` lines restores the original block IDs**.
+
+
+
 ### 12.8 Golden rules distilled (cross-cutting)
 
 1. **Port is live, not cached.** Read it from `conf.json` every session; never trust a hardcoded port. A stale port silently eats writes (§12.5).
@@ -485,9 +500,9 @@ Verified 2026-08-13: calling `/api/filetree/createDocWithMd` with a `path` whose
 8. **Never bulk-delete by timestamp prefix.** A doc's body and an agent's appended section can share a creation-prefix; a prefix glob deletes legitimate blocks (e.g. body `m` formulas) along with the orphans. Enumerate exact IDs from `getChildBlocks`, filter by type/parent, delete only that list sequentially, then live-verify the count and that no lead-in lost its `m` block (§12.7).
 9. **Reload the UI after a write the user must see.** A kernel write does not auto-refresh the desktop UI; an open tab keeps its old render and the file tree may not show new docs. After verifying the write with `getChildBlocks`, call `/api/ui/reloadUI` (and `closeNotebook`/`openNotebook` to refresh the tree). Otherwise the user reports "看不到" even though the data is correct (§12.9).
 
-## 13. Recent-version capabilities (running instance confirmed v3.8.0, latest as of 2026-08-13; v3.7.3 in §13.1–13.5, v3.8.0 in §13.6–13.8)
+## 13. Recent-version capabilities (baseline v3.8.0 §13.1–13.8; **re-confirmed present on v3.8.7, 2026-10-21** — upgrade-specific changes in §12.12)
 
-The SiYuan instance this skill runs against was upgraded to **v3.8.0** (major release, published 2026-08-12; prior baselines this skill was verified on: v3.7.2 → v3.7.3 → v3.8.0). Each v3.8.0 change below was **verified against the live running kernel or the instance's own `conf.json`** — do not assume the same paths exist on older/newer builds; re-probe if the instance is upgraded again.
+The SiYuan instance this skill runs against was upgraded to **v3.8.0** (major release, published 2026-08-12; prior baselines this skill was verified on: v3.7.2 → v3.7.3 → v3.8.0 → **v3.8.7**). Each change below was **verified against the live running kernel or the instance's own `conf.json`** (re-probed 2026-10-21 on v3.8.7) — do not assume the same paths exist on older/newer builds; re-probe if the instance is upgraded again.
 
 ### 13.1 Databases / attribute views via `/api/av/*`
 v3.7.3 substantially enhanced databases: column alignment, reverse-links in the attribute panel, per-entry templates, **deep-linkable entries** (#12022), and in-editor DB properties. They are now readable through the kernel:
