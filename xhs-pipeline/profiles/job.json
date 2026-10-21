@@ -1,0 +1,32 @@
+{
+  "name": "job",
+  "session": "xhs-job-notes",
+  "group_title": "面经收集",
+  "site": "https://www.xiaohongshu.com",
+  "parent_path": "/找工作/找工作题库",
+  "staging_dir": "C:/Users/qilin/AppData/Local/Temp/xhs_staging",
+  "categories": [
+    {
+      "name": "ai infra",
+      "subpage_id": "20260829220409-a4799wm",
+      "keywords": ["AI infra 面经", "AI infra 实习 面经", "AI infra 校招"],
+      "question_bank": true
+    },
+    {
+      "name": "数字ic设计",
+      "subpage_id": "20260829220410-2fh7flt",
+      "keywords": ["数字IC 设计 面经", "数字IC 校招 面经", "数字IC 设计 实习"],
+      "question_bank": true,
+      "exclude_title_keywords": ["验证", "UVM"],
+      "note": "只收设计方向；UVM/验证暂不关注（用户 2026-08-30 决定）"
+    },
+    {
+      "name": "求职目标岗位",
+      "subpage_id": "20260829220410-4a9kr1k",
+      "keywords": ["AI infra 实习 招聘", "数字IC 校招 招聘", "IC 校招 HC"],
+      "question_bank": false,
+      "jobs": true,
+      "note": "岗位帖要用「招聘/校招/HC」类词，用「岗位」搜出来的多是面经"
+    }
+  ]
+}

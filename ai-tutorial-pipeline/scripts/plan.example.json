@@ -1,0 +1,17 @@
+{
+  "session": "ai-tutorial-power202",
+  "group_title": "教程生成",
+  "chat_url": "https://chat.qwen.ai/",
+  "composer_css": "textarea[placeholder=\"Ask Qwen\"]",
+  "copy_btn_css": "button[aria-label=\"Copy\"], button[title=\"Copy\"]",
+  "parent_id": "20260829193220-i8sda14",
+  "out_dir": "chapters",
+  "poll_interval": 20,
+  "max_wait_min": 25,
+  "min_growth": 1500,
+  "chapters": [
+    { "key": "ch1", "prompt_file": "prompts/ch1.txt", "fallback_title": "第一章" },
+    { "key": "ch2", "prompt_file": "prompts/ch2.txt", "fallback_title": "第二章" },
+    { "key": "ch3", "prompt_file": "prompts/ch3.txt", "fallback_title": "第三章" }
+  ]
+}

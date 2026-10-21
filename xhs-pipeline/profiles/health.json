@@ -1,0 +1,13 @@
+{
+  "name": "health",
+  "session": "xhs-health",
+  "group_title": "健康知识收集",
+  "site": "https://www.xiaohongshu.com",
+  "staging_dir": "D:/Project/Zcode/xhs-data/health/staging",
+  "categories": [
+    {
+      "name": "健康",
+      "keywords": ["皮质醇 降低 方法", "减肥 误区 科普", "健康生活习惯"]
+    }
+  ]
+}

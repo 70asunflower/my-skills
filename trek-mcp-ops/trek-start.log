@@ -1,0 +1,20 @@
+[1/4] Docker daemon down -> launching Docker Desktop (headless)...
+      Docker Desktop process up, waiting for the daemon (can take ~1-2 min on a cold boot)...
+
+      docker daemon ready.
+[2/4] docker compose up -d ...
+[3/4] waiting for TREK health at http://localhost:3000/api/health ...
+..
+      TREK healthy.
+[4/4] starting auth-proxy supervisor (C:\Users\qilin\.workbuddy\skills\trek-mcp-ops\scripts\proxy\supervise.mjs) ...
+      proxy up.
+[self-test] MCP handshake through the proxy ...
+      OK — 135 MCP tools reachable.
+
+TREK is READY.
+  Web UI  : http://localhost:3000
+  MCP     : http://127.0.0.1:3001/mcp
+  Browse tools    : trek-call.cmd --list <keyword>
+  Check arguments : trek-call.cmd --schema <tool>
+  Call a tool     : trek-call.cmd <tool> @args.json
+  Free resources  : trek.cmd stop

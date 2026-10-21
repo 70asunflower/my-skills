@@ -1,0 +1,13 @@
+{
+  "name": "shexp",
+  "session": "xhs-shexp",
+  "group_title": "上海体验课收集",
+  "site": "https://www.xiaohongshu.com",
+  "staging_dir": "D:/Project/Zcode/xhs-data/shexp/staging",
+  "categories": [
+    {
+      "name": "体验课",
+      "keywords": ["上海体验课", "上海体验项目清单", "上海周末体验课"]
+    }
+  ]
+}

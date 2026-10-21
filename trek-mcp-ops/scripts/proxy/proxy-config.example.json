@@ -1,0 +1,6 @@
+{
+  "trekBase": "http://localhost:3000",
+  "proxyPort": 3001,
+  "clientId": "PASTE_TREK_MACHINE_CLIENT_ID",
+  "clientSecret": "PASTE_TREK_MACHINE_CLIENT_SECRET"
+}
