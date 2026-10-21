@@ -43,6 +43,7 @@ SYNC_SKILLS = [
     "paper-figures",
     "project-init",
     "project-review",
+    "snap",
     "svg-diagram-pipeline",
     "xhs-pipeline",
 ]
