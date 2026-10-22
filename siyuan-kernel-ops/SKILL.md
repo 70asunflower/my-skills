@@ -3,8 +3,9 @@ name: siyuan-kernel-ops
 description: Safely search, read, create, edit, move, and batch-process a local SiYuan knowledge base from WorkBuddy through SiYuan's Kernel HTTP API. Use when the user mentions SiYuan/思源笔记, notebooks, documents, blocks, backlinks, attributes, SQL/full-text search, daily notes, or asks WorkBuddy to organize or write back knowledge. Prefer block-level, idempotent edits; protect block IDs, references, assets, and user data.
 compatibility: WorkBuddy on Windows with Python 3 and local access to a running SiYuan desktop/kernel. The default workspace config is D:\MyData\Warehouse\siyuan-backup\conf\conf.json; SIYUAN_URL, SIYUAN_TOKEN, and SIYUAN_CONF may override it.
 metadata:
-  version: "2.4.0"
+  version: "2.5.0"
   target: "WorkBuddy + SiYuan"
+  changelog: "2.5.0 (2026-10-22) — consolidated every on-machine agent memory about SiYuan; added the §12 pitfall index and §12.13–12.20 (multi-block truncation, batch-rebuild scale threshold, hand-built table syntax, kramdown round-trip, container-vs-leaf reads, reloadUI timeout, sandbox/loopback preconditions); golden rules extended to 14."
 ---
 
 # WorkBuddy × SiYuan — safe kernel operations
@@ -31,7 +32,7 @@ Use this precedence on every new WorkBuddy session:
 3. `D:\MyData\Warehouse\siyuan-backup\conf\conf.json`.
 4. Official default URL `http://127.0.0.1:6806`, with token from config or supplied securely by the user.
 
-When reading `conf.json`, locate the token defensively (normally `api.token`) and collect loopback URLs from `serverAddrs` if present. Do not assume the port is always fixed or always dynamic. Reject non-loopback HTTP URLs unless the user explicitly configured a trusted remote kernel.
+When reading `conf.json`, locate the token defensively (normally `api.token`) and collect loopback URLs from `serverAddrs` if present. Do not assume the port is always fixed or always dynamic. Reject non-loopback HTTP URLs unless the user explicitly configured a trusted remote kernel — and note that a non-loopback address in `serverAddrs` can accept reads while silently discarding writes, so always write through `127.0.0.1` (§12.20).
 
 Probe **a real data endpoint**, not only `/api/system/version`:
 
@@ -250,6 +251,7 @@ Exploit SiYuan's strengths instead of flattening it into plain files:
 - For backups, prefer SiYuan snapshot/history/export or copy the workspace only with a consistent procedure. A Git commit is not a substitute for a live consistent backup.
 - Preserve `assets/` references and upload new resources through `/api/asset/upload`.
 - Do not start Git commit/push, repository reset, sync reset, or data-repository maintenance unless the user explicitly asks and the relevant dedicated workflow is available.
+- **Companion skills — do not duplicate their procedures here.** The daily `robocopy /MIR` + git backup routine (including the `MSYS_NO_PATHCONV=1` requirement for `/MIR` under Git Bash, PowerShell blocking robocopy as a native exe, and the git-lfs binary loss on the vendored PortableGit) belongs to `siyuan-backup-sync`. LaTeX/KaTeX cleanup and公式入库 belongs to `siyuan-markdown-formula-formatter`. This skill points at them and only keeps the traps that affect kernel writes (§12.16, §12.20).
 
 ## 9. Response style
 
@@ -369,7 +371,32 @@ Do not over-index on block-graph theory for a Markdown-authoring user; the Markd
 
 When an endpoint is unavailable in the installed SiYuan version, inspect that version's official API/CLI help and choose the closest documented endpoint. Do not guess request fields or fall back to direct data-file mutation.
 
-## 12. Known kernel quirks (v3.8.0-era findings §12.1–12.11; re-verified live on **v3.8.7** 2026-10-21 — upgrade-specific changes in §12.12; v3.8.0 capabilities in §13.6–13.8 — cost real debugging, save these)
+## 12. Known kernel quirks
+
+§12.1–§12.12: v3.8.0-era findings, re-verified live on **v3.8.7** (2026-10-21).
+§12.13–§12.21: consolidated 2026-10-22 from every WorkBuddy project's agent memory on this machine (project daily logs, the SiYuan backup automation memory, user-level memory, and sibling skills' gotchas). The kernel was offline at consolidation time, so those entries carry their original verification dates instead of a fresh probe — re-confirm against the live kernel if behaviour looks different.
+
+Every entry here cost real debugging and real data loss. Read the index before writing anything.
+
+**Pitfall index — find your symptom first:**
+
+| Symptom | Section |
+|---|---|
+| `code:0` but nothing changed | §12.1 / §12.3 / §12.5 / §12.14 |
+| Multi-paragraph markdown → only the first paragraph landed | §12.14 |
+| Added table rows did not apply | §12.3 |
+| Deleted a heading, orphan children remain | §12.3 |
+| Edited one list item, the others vanished | §12.3 |
+| Formula block renders blank | §12.4 |
+| User says "看不到" but the data is there | §12.9 |
+| Blocks landed at the doc top / wrong order | §12.6 / §12.13 |
+| Bulk delete wiped real body blocks | §12.7 |
+| Child document created one level too deep | §12.11 |
+| Whole callout / pasted article vanished | §12.12 |
+| Hand-built table has extra empty columns | §12.16 |
+| Verification count is double the truth | §12.18 |
+| Request times out right after a reload | §12.19 |
+| Connection refused / silent network failure | §12.20 |
 
 ### 12.1 `updateBlock(rootId, dataType:"markdown")` MERGES, it does not replace
 When you call `updateBlock` on a document **root** with markdown, SiYuan **merges** the new markdown into the existing child-block tree. Old child blocks (e.g. stale copies carrying zero-width chars or a duplicate title) **survive** the write. Symptoms: `code==0` returns, the re-export looks unchanged, and a second `getChildBlocks` shows BOTH old + new blocks co-existing.
@@ -486,9 +513,73 @@ Instance upgraded v3.8.0 → **v3.8.7**. Live smoke test against the running ker
 
 **`.sy` v3 format (new builds) — for read-only disaster recovery only (§8 still forbids writing `.sy`):** nodes use capitalized keys — `{ID, Type, Properties, Children}`. Text lives in `NodeText.Data`, `NodeTextMark.TextMarkTextContent`, inline math in `TextMarkInlineMathContent`; `TextMarkType` can be compound (`"strong inline-math"` — split on space, wrap per token). A callout is `NodeCallout` (`CalloutType`/`CalloutTitle`); its kramdown form is a `> ` blockquote whose first line is `> [!NOTE]`. History snapshots live at `<workspace>/history/<ts>-update|delete/<nb>/.../<doc>.sy` (~10-min cadence); rebuilding kramdown from a snapshot and re-inserting it **with the original `{: id=...}` lines restores the original block IDs**.
 
+### 12.13 移动块与插入定位（2026-08-25 实测）
+- **移动块端点是 `/api/block/moveBlock`（驼峰）**，写成 `move_block` 会 404。参数：`{id, parentID, previousID}`，把块移到 previousID 之后；整段搬移时逐块按顺序移动、每次把上一块的 id 作为下一个的 previousID。
+- **`insertBlock` 带 `previousID` 可能静默失效，内容落到文档开头**——插入后必须重新 `getChildBlocks`/导出复核位置；错位时用 moveBlock 逐块搬回。
+- **moveBlock 搬移后立即 `exportMdContent` 可能短暂返回 `data: None`**（code=0 但 data 为空）——是内核索引重建中的瞬态，等几秒重试即恢复，不是写失败。批量导出校验脚本必须带重试（如 4 次 × 3s），否则误判失败（2026-08-25 实测：5 次 moveBlock 后连续两次导出 None，sleep 5s 后恢复正常）。
+- **导出 Markdown 里的 U+200B 不一定是脏数据**：Lute 导出渲染器会在行内节点（`` `code` ``、加粗等）边界插入零宽空格作保护符。判断方法：对同一文档跑 `getChildBlocks` 统计存储层 markdown 的 U+200B 数量——存储为 0 而导出有值 = 渲染器行为，勿清理（清理也不可能，源里没有）。
 
+### 12.14 `updateBlock` keeps only the FIRST block of multi-block markdown
 
-### 12.8 Golden rules distilled (cross-cutting)
+Verified 2026-08-06, reproduced twice more on 2026-09-01 (same trap, two different documents).
+
+Pushing markdown that contains **more than one block** into `updateBlock` — a paragraph plus a bullet list, a code fence plus an explanation paragraph, a heading plus body — keeps only the **first** block and silently discards the rest. `code:0`, no error, no warning. Lost this way: a `#include <cstdlib>` line, a three-item list, and a note paragraph.
+
+- **Rule: one block per `updateBlock`.** Anything multi-block goes through `/api/block/insertBlock` (it splits headings / code / tables / lists into sibling blocks by itself).
+- **Block-type preconditions:** editing an `h` block requires the markdown to carry the `#`-prefix (`## `, `### ` …), and editing an `m` block requires `$$…$$` wrapping. Write plain markdown onto a heading and the level/type is mangled — a code block rewritten as markdown was parsed as H1 and swallowed the rest of the document.
+- **All heading levels report `type == "h"`** — there is no `h1`/`h2`/`h3` in the block record. Filtering children by `"h1"` yields zero hits; the level lives only in the count of `#` characters.
+- Re-enumerating headings to shift levels: heading blocks are **siblings under the doc root**, not a parent/child chain, so you must enumerate via `getChildBlocks` and rewrite each one; the document title itself is the **root block** and is not in the child list (a 220-heading shift finished with 0 failures this way, 2026-09-01).
+
+### 12.15 Batch rebuild has a scale threshold — Fix A degrades above ~20 blocks
+
+§12.1's **Fix A** (delete every child, then `updateBlock(rootId, markdown)`) is only reliable on small documents.
+
+Verified 2026-09-02: with 50+ children, a batch of `deleteBlock` calls **silently partially fails** — every call returns `code==0`, yet `getChildBlocks` afterwards still shows 56–85 % of the blocks (deleted 50 → 28 remained; deleted 100 → 85 remained). It happened on a freshly resolved live port, so this is *not* the stale-port trap of §12.5 — same symptom, different cause. A 2026-10-06 run confirmed one-shot bulk delete can partially fail again.
+
+- **Threshold: more than ~20 child blocks → go straight to Fix B** (`removeDocByID` + `createDocWithMd`, one transaction), or chunk the deletes with a live re-read between chunks.
+- **Do not write `while getChildBlocks(): delete…`** — SiYuan regenerates one empty `p` block, so the loop never terminates (2026-08-13). Delete only non-empty children, then `updateBlock`.
+- **Persist the new doc ID** to a registry file when a rebuild changes it; stdout can be swallowed and the script deleted, and a lost ID makes a successful rebuild look like "the document disappeared" (2026-09-02).
+
+### 12.16 Hand-built tables: the pipe is both separator and attribute prefix
+
+SiYuan stores per-cell styling as `|{: style="text-align: center;"}cell|{: style="text-align: center;"}cell|` — the `|` acts as the cell separator **and** as the prefix of the next cell's attribute.
+
+- Building rows the usual Markdown way (`"…cell|" + "|{: style=…}next"`) produces `||`, which the parser reads as an **extra empty column** (2026-10-22, caught only by re-reading the kramdown).
+- Correct construction: `"|" + "|".join(S + c for c in cells) + "|"` with `S = '{: style="text-align: center;"}'`; the separator row is `"|" + "|".join(" :---: " for _ in cells) + "|"`.
+- **Pseudo-table trap:** blank lines left between table rows make each row degrade into an independent paragraph block. The user sees a wall of pipe-text and the document reports "table blocks = 0". Strip blank lines that sit between rows (skip code fences), then assert the table-block count equals the source's table count (recorded in `ai-tutorial-pipeline` gotchas; hit on 3 of 6 chapters of one tutorial).
+
+### 12.17 Round-tripping kramdown carries block attributes back
+
+`getBlockKramdown` returns each block's source with a `{: id="…" updated="…"}` attribute attached.
+
+- Feeding that string straight back into `updateBlock(dataType:"markdown")` risks writing the attribute text into the body. On 2026-10-22 it happened to be harmless (SiYuan parsed it as a block attribute and the block ID survived), but that is luck, not a contract.
+- **Rule: read a block's content from `getChildBlocks(...)[i]["markdown"]`** (clean markdown). If you must use kramdown, strip a leading `{: … }` before writing.
+- Useful side effect: those `updated="<ts>"` values are exactly how you separate stale blocks from fresh ones (§12.1).
+
+### 12.18 Container vs leaf read semantics (and a duplicate-visit quirk)
+
+- **`getChildBlocks(leafId)` returns the leaf's child nodes, not the leaf itself.** To read one specific block's own markdown you must pick it out of its *parent's* child list, or build an `id → markdown` index by walking down from the doc root (2026-10-22: 296 blocks ≈ 19 s). `next(c for c in getChildBlocks(bid) if c["id"] == bid)` never matches for a leaf.
+- **Container blocks (`callout`, `b` quote, superblock) return `markdown` that includes every nested child's content.** So "walk every block and count occurrences of X" over-counts badly — an image reference inside a quote is reported by both the quote and the inner `p`. Verify by counting only **leaf blocks whose entire markdown `fullmatch`es** the target pattern.
+- **`getChildBlocks` has a duplicate-visit quirk on list items** (logged as F3 in `xhs-pipeline` gotchas; hit again 2026-10-22 while shifting heading levels): a recursive walk can list the same block several times. Re-running an `updateBlock` whose target was computed from one snapshot is idempotent and harmless — but **never treat traversal count as block count**.
+
+### 12.19 The kernel goes briefly unresponsive right after `reloadUI`
+
+Immediately after `POST /api/ui/reloadUI`, follow-up requests can fail with `WinError 10060` (connection attempt timed out) for a few seconds — the kernel is busy re-syncing the frontend (2026-10-22).
+
+- Batch scripts must retry (3 attempts × 2 s) around any request that follows a reload, instead of reporting a write failure.
+- This compounds §12.13: a `moveBlock` burst makes `exportMdContent` return `data: None` for a while; a reload burst makes the socket time out. Both are transient, both look like failures.
+
+### 12.20 Environment preconditions: sandbox, loopback, instance state
+
+- **The Bash tool's default sandbox blocks localhost network access, and it fails silently.** Kernel API calls need `dangerouslyDisableSandbox: true`; without it the connection just fails with no useful message (2026-07-23).
+- **The sandbox cannot headless-launch SiYuan.** `Start-Process siyuan.exe` yields 0 processes and 0 listening ports. API access only works while the desktop client is already running on the host — never "fix" a refused connection by trying to start SiYuan for the user.
+- **Only the loopback address is writable.** `conf.json` `serverAddrs` may hold a LAN entry (e.g. `http://10.120.66.249:58881`) next to `127.0.0.1`. The LAN entry **reads fine but silently discards writes** (2026-08-13, investment project). Always write through `127.0.0.1`.
+- **Port drift is the norm, not the exception.** Ports observed on this single machine: 49180 / 50524 / 52186 / 55962 / 57168 / 57248 / 58356 / 58881 / 59119 / 64528 / 58514. Any historical "the port is X" conclusion must be re-derived from `conf.json` every session (§12.5).
+- **The token rotates on reset** — read `api.token` in full every time; a truncated value produces misleading 401/404s (2026-08-06).
+- **SiYuan must be closed before any git operation on the workspace** (SQLite write conflicts). The user closes it; do not do it on their behalf anyway (§8).
+- **An open editor tab keeps its old in-memory render** after a kernel write, and the file tree may not show a new doc — see §12.9 for the reload recipe. This is a display problem, never a reason to re-write.
+
+### 12.21 黄金法则汇总（跨条，建议最后读）
 
 1. **Port is live, not cached.** Read it from `conf.json` every session; never trust a hardcoded port. A stale port silently eats writes (§12.5).
 2. **Verify with `getChildBlocks` (live), not `getBlockKramdown` / `.sy` (stale cache).** The latter can lie 13s+ after a write (§12.2).
@@ -499,6 +590,11 @@ Instance upgraded v3.8.0 → **v3.8.7**. Live smoke test against the running ker
 7. **Never parallelize writes to the same document.** Sequential writes only (§6).
 8. **Never bulk-delete by timestamp prefix.** A doc's body and an agent's appended section can share a creation-prefix; a prefix glob deletes legitimate blocks (e.g. body `m` formulas) along with the orphans. Enumerate exact IDs from `getChildBlocks`, filter by type/parent, delete only that list sequentially, then live-verify the count and that no lead-in lost its `m` block (§12.7).
 9. **Reload the UI after a write the user must see.** A kernel write does not auto-refresh the desktop UI; an open tab keeps its old render and the file tree may not show new docs. After verifying the write with `getChildBlocks`, call `/api/ui/reloadUI` (and `closeNotebook`/`openNotebook` to refresh the tree). Otherwise the user reports "看不到" even though the data is correct (§12.9).
+10. **One block per `updateBlock`.** Multi-block markdown silently keeps only the first block; use `insertBlock` for anything larger (§12.14).
+11. **Above ~20 child blocks, skip Fix A and rebuild the document.** Batch delete degrades silently at scale and the loop-until-empty variant never terminates (§12.15).
+12. **Count leaves, not containers.** Container markdown includes all descendants, and the walk can visit a block more than once — both inflate any "how many X are there" check (§12.18).
+13. **Never feed kramdown back as markdown** without stripping the leading `{: … }` attribute (§12.17).
+14. **Only loopback is writable, and only while the desktop client runs.** LAN addresses read but drop writes; the sandbox blocks localhost unless explicitly allowed (§12.20).
 
 ## 13. Recent-version capabilities (baseline v3.8.0 §13.1–13.8; **re-confirmed present on v3.8.7, 2026-10-21** — upgrade-specific changes in §12.12)
 
@@ -554,9 +650,3 @@ Implication for WorkBuddy flows: these features are not directly scriptable thro
 - **改前必须 exportMdContent 备份到本地文件**：本次靠备份整篇回滚，救回了中途误伤的加粗标记。
 - **校验清单模板**：残留 `<sub>`/`</sub>`=0、`digit~digit`=0、零宽字符(U+200B/C/D,FEFF)=0、引用格式 `【[\w./()\-]+】` 全匹配、关键数字逐一 assert 存在、标题/表格/引用块数量与改前一致。
 
-
-## 移动块与插入定位的坑（2026-08-25 实测）
-- **移动块端点是 `/api/block/moveBlock`（驼峰）**，写成 `move_block` 会 404。参数：`{id, parentID, previousID}`，把块移到 previousID 之后；整段搬移时逐块按顺序移动、每次把上一块的 id 作为下一个的 previousID。
-- **`insertBlock` 带 `previousID` 可能静默失效，内容落到文档开头**——插入后必须重新 `getChildBlocks`/导出复核位置；错位时用 moveBlock 逐块搬回。
-- **moveBlock 搬移后立即 `exportMdContent` 可能短暂返回 `data: None`**（code=0 但 data 为空）——是内核索引重建中的瞬态，等几秒重试即恢复，不是写失败。批量导出校验脚本必须带重试（如 4 次 × 3s），否则误判失败（2026-08-25 实测：5 次 moveBlock 后连续两次导出 None，sleep 5s 后恢复正常）。
-- **导出 Markdown 里的 U+200B 不一定是脏数据**：Lute 导出渲染器会在行内节点（`` `code` ``、加粗等）边界插入零宽空格作保护符。判断方法：对同一文档跑 `getChildBlocks` 统计存储层 markdown 的 U+200B 数量——存储为 0 而导出有值 = 渲染器行为，勿清理（清理也不可能，源里没有）。
