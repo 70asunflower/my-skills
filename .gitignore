@@ -17,3 +17,36 @@ Thumbs.db
 # Env
 .env
 .pending_batch.json
+
+# >>> skillsync: 第三方技能，不纳入本仓库版本控制 >>>
+3d-printing-cad-design/
+academic-paper/
+academic-paper-reviewer/
+academic-pipeline/
+academic-poster/
+browser-skill/
+darwin-skill/
+deep-research/
+deep-research-report-pipeline/
+drive-host-cli-headless/
+editaplot/
+fbs-bookwriter/
+find-cited-papers-by-venue/
+fireworks-tech-graph/
+fireworks-tech-graph-wb/
+ieee-engineering-paper-writer/
+ima-kb-sync/
+kimi-webbridge/
+mcporter/
+openrouter-model-to-workbuddy/
+paper-review/
+port-skill-to-workbuddy/
+satellite-computing-paper-pipeline/
+singlefile-webapp-iteration/
+skills-security-check/
+storage-analyzer/
+ta-nt-agent-orchestrator/
+ttskill-runtime-entry/
+vscode-byok-provider/
+yfinance-free-source-shim/
+# <<< skillsync <<<

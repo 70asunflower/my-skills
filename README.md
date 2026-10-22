@@ -26,6 +26,7 @@
 | [strict-docx-audit](./strict-docx-audit/) | docx 转换后的质量闸：12 项结构与排版检查 |
 | [snap](./snap/) | 零依赖页面截图/体检/像素对比 CLI：无头 Chrome 一条命令截图（整页/元素/区域/高清），--audit 程序化检坏图溢出裁切，--diff 视觉回归；agent 确认页面渲染效果首选 |
 | [svg-diagram-pipeline](./svg-diagram-pipeline/) | SVG 交互示意图 → 无头 Chrome 渲染 PNG → 插入思源笔记的完整管线，含 MOSFET 电路符号语法 |
+| [agent-skills-sync](./agent-skills-sync/) | 多 agent（WorkBuddy/Claude/Codex/ZCode/Gemini）共享用户级技能的单一真相源：junction 分发、状态矩阵、漂移分类与冲突保护 |
 
 ### 个人工作流 `personal` — 包含个人特定配置，他人无需安装
 
@@ -43,19 +44,31 @@
 
 ## 使用方式
 
-将整个 skill 文件夹复制到对应 agent 的 skills 目录即可使用：
+把 skill 文件夹复制到对应 agent 的 skills 目录即可使用。本机已改为目录联结（junction）方式，见下一节。
 
 - WorkBuddy：`~/.workbuddy/skills/`
+- Claude Code：`~/.claude/skills/`
+- Codex：`~/.codex/skills/`
 - ZCode：`~/.zcode/skills/`
+- Gemini CLI：`~/.gemini/config/skills/`
 
-## 与本机技能目录保持同步
+## 与本机各 agent 的技能目录保持同步
 
-本仓库的 ZCode 技能由脚本从 `~/.zcode/skills/` 同步而来：
+本机各 agent 的 skills 目录通过 Windows 目录联结指向本仓库，**本仓库是唯一真相源**：直接编辑这里的文件，所有 agent 立即生效，不再需要任何同步命令。
 
 ```bash
-python scripts/sync_zcode_skills.py    # 同步清单内技能（清单在脚本顶部维护）
-python scripts/check_consistency.py    # 目录 ↔ README 双向校验（CI 同款）
-git commit && git push
+# 诊断（只读）
+python ~/.agents/skillsync.py status     # 每个 agent 每个技能的链接状态
+python ~/.agents/skillsync.py doctor     # 断链、链式嵌套等结构问题
+python ~/.agents/skillsync.py scan       # 多份副本的漂移报告
+
+# 在本仓库新增技能目录后，分发到各 agent
+python ~/.agents/skillsync.py link --apply
+
+# 提交前校验（CI 同款）
+python scripts/check_consistency.py
 ```
 
-新增自制技能后，把目录名加进 `scripts/sync_zcode_skills.py` 的 `SYNC_SKILLS` 清单再跑一遍。第三方技能（Wind/Kimi 官方、Academic pack 等）一律不入库。
+本仓库是公开仓库，只收录自制技能。第三方技能（Wind/Kimi 官方、Academic pack、FBSir 等）由 skillsync 收编到本机、在 `.gitignore` 的 `skillsync` 标记区块中排除，随目录存在但不入库，也不参与 README 校验。
+
+`scripts/sync_zcode_skills.py` 已废弃并内置拒绝执行的保护——旧逻辑是「先删除仓库目录、再从 agent 目录复制」，在 junction 布局下方向相反，会把仓库内容覆盖掉。

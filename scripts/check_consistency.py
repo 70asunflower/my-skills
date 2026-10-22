@@ -17,18 +17,45 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 README = REPO_ROOT / "README.md"
+GITIGNORE = REPO_ROOT / ".gitignore"
 SKIP_DIRS = {"scripts"}
+SYNC_BLOCK_BEGIN = "# >>> skillsync"
 NAME_RE = re.compile(r"^name:\s*(.+?)\s*$", re.MULTILINE)
 LINK_RE = re.compile(r"\]\(\./([^/]+)/\)")
 
 
+def third_party_dirs() -> set[str]:
+    """skillsync 标记区块里列出的第三方技能目录。
+
+    这些技能由 skillsync 统一管理、以 junction 分发到各 agent，
+    但不属于本仓库的内容（版权与权属原因不入库），因此不参与 README 校验。
+    """
+    if not GITIGNORE.exists():
+        return set()
+    out: set[str] = set()
+    inside = False
+    for line in GITIGNORE.read_text(encoding="utf-8").splitlines():
+        s = line.strip()
+        if s.startswith(SYNC_BLOCK_BEGIN):
+            inside = True
+            continue
+        if inside and s.startswith("# <<< skillsync"):
+            inside = False
+            continue
+        if inside and s and not s.startswith("#"):
+            out.add(s.rstrip("/"))
+    return out
+
+
 def skill_dirs() -> list[str]:
+    excluded = third_party_dirs()
     return sorted(
         p.name
         for p in REPO_ROOT.iterdir()
         if p.is_dir()
         and not p.name.startswith((".", "_"))
         and p.name not in SKIP_DIRS
+        and p.name not in excluded
     )
 
 
