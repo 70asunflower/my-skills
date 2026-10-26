@@ -52,10 +52,28 @@
 - Codex：`~/.codex/skills/`
 - ZCode：`~/.zcode/skills/`
 - Gemini CLI：`~/.gemini/config/skills/`
+- Antigravity：`~/.gemini/config/skills.json`（原生声明式直挂主库，避开 Windows Junction 限制）
+
+## 外部技能
+
+除上表收录的自制技能外，本机还统一管理着一批外部技能——包括 `humanizer-zh`（去 AI 味润色，MIT，来自 op7418/Humanizer-zh）、`kimi-webbridge`（浏览器接管）、`mcporter`（MCP 调度）、`fireworks-tech-graph`（SVG 图形）等。它们以完全相同的 junction 方式分发到各 agent，但**不纳入本仓库版本控制**（见 `.gitignore` 的 `skillsync` 标记区块），只随目录存在于本机。
+
+其中 `humanizer-zh` 已被定为**写长文时的固定动作**：报告、方案、论文、正式文档、README、汇报材料等长文本，产出草稿后过一遍该技能再交付。
+
+这些技能在主库里的位置示意：
+
+```
+my-skills/
+├── agent-skills-sync/     自制
+├── siyuan-kernel-ops/     自制
+├── humanizer-zh/          外部 · 去 AI 味润色（写长文必过）
+├── kimi-webbridge/        外部 · 浏览器接管
+└── mcporter/              外部 · MCP 调度
+```
 
 ## 与本机各 agent 的技能目录保持同步
 
-本机各 agent 的 skills 目录通过 Windows 目录联结指向本仓库，**本仓库是唯一真相源**：直接编辑这里的文件，所有 agent 立即生效，不再需要任何同步命令。
+本机各 agent 的 skills 目录通过 Windows 目录联结指向本仓库（Antigravity 通过 `skills.json` 原生直挂），**本仓库是唯一真相源**：直接编辑这里的文件，所有 agent 立即生效，不再需要任何同步命令。
 
 ```bash
 # 诊断（只读）
