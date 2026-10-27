@@ -1,6 +1,6 @@
 ---
 name: agent-skills-sync
-description: 管理本机多个 AI agent（WorkBuddy 国内版/海外版 / Claude Code / Codex / ZCode / Gemini CLI / Antigravity）共享用户级技能的单一真相源。当用户问「技能怎么同步到所有 agent」「加一个技能到所有 agent」「各 agent 技能不一致」「某个 agent 里 `/` 看不到技能」「junction 链路断了」，或需要诊断/修复技能目录结构时使用。
+description: 管理本机多个 AI agent（WorkBuddy 国内版/海外版 / Claude Code / Codex / ZCode / Gemini CLI / Antigravity）共享用户级技能的单一真相源。当用户问「技能怎么同步到所有 agent」「新建一个技能」「写个 skill」「这个技能该放哪」「加一个技能到所有 agent」「各 agent 技能不一致」「某个 agent 里 `/` 看不到技能」「junction 链路断了」，或需要诊断/修复技能目录结构时使用。新建技能前必读：技能只能建在主库，不能用 skill-creator 的默认路径。
 agent_created: true
 ---
 
@@ -62,6 +62,9 @@ python scripts/skillsync.py gitignore     # 刷新 .gitignore 第三方区块
 **改技能**：直接编辑仓库里的文件，保存即生效，无需任何命令。
 
 **加技能**：
+
+> **不要用内置 `skill-creator` 的默认路径**（`~/.codebuddy/skills/`）——该目录不在任何 agent 的扫描范围内，建了没人看得见。技能一律建在 `<主库>/<skill-name>/`，再用 `link --apply` 分发。
+
 1. 在仓库建 `<skill>/SKILL.md`（frontmatter 必须有 `name` 与 `description`，`name` 与目录名一致）
 2. 进了 README 表格（CI 强制双向校验）
 3. `python scripts/skillsync.py link --apply` 分发到各 agent
