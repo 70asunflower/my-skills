@@ -1,0 +1,8 @@
+{
+  "intentional": [
+    "workbuddy/etfirst",
+    "workbuddy/neodata-financial-search"
+  ],
+  "chained": [],
+  "note": "intentional=设计上不共享；chained=待修欠账，目标为空"
+}

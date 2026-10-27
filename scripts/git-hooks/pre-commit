@@ -1,0 +1,9 @@
+#!/bin/sh
+# skillsync 提交闸门。安装：cp scripts/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+# 临时跳过：git commit --no-verify
+
+PY=python
+command -v python >/dev/null 2>&1 || PY=py
+command -v "$PY" >/dev/null 2>&1 || { echo "[skillsync] 找不到 python，跳过提交检查"; exit 0; }
+
+exec "$PY" scripts/precommit.py
