@@ -68,7 +68,7 @@ call <skill>/scripts/shoot.bat file:///D:/tmp/<名>-mini.html D:\...\out.png "20
 - 内核端口**每次启动漂移**：从 `D:\MyData\Warehouse\siyuan-backup\conf\conf.json` 顶层 `serverAddrs` 现读（勿写死 6806）。
 - 接口：`POST /api/asset/upload`，multipart，**字段名必须是 `file[]`（带方括号）**。
 - ⚠️ 已踩坑：写字段 `file` 返回 `code:0` + 空 `succMap` 的**静默失败**——磁盘上没有文件，接口却不报错。判定成功只看 `succMap` 非空。
-- 解析 `resp["data"]["succMap"]` 取 `assets/xxx.png` 相对路径。
+- 解析 `resp["data"]["succMap"]` 取路径——**返回值已含 `assets/` 前缀**，插图模板里不要再拼一层（拼了会写出 `assets/assets/…` 而对不上真实文件，图静默不显示；2026-10-27 踩过：succMap 正常返回、磁盘有文件，唯独 URL 双前缀）。
 
 ## 第 4 步｜插图进文档
 
