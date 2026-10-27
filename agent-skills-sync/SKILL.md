@@ -1,6 +1,6 @@
 ---
 name: agent-skills-sync
-description: 管理本机多个 AI agent（WorkBuddy / Claude Code / Codex / ZCode / Gemini CLI）共享用户级技能的单一真相源。当用户问「技能怎么同步到所有 agent」「加一个技能到所有 agent」「各 agent 技能不一致」「junction 链路断了」，或需要诊断/修复技能目录结构时使用。
+description: 管理本机多个 AI agent（WorkBuddy 国内版/海外版 / Claude Code / Codex / ZCode / Gemini CLI / Antigravity）共享用户级技能的单一真相源。当用户问「技能怎么同步到所有 agent」「加一个技能到所有 agent」「各 agent 技能不一致」「某个 agent 里 `/` 看不到技能」「junction 链路断了」，或需要诊断/修复技能目录结构时使用。
 agent_created: true
 ---
 
@@ -13,12 +13,16 @@ agent_created: true
 ```
 D:\Project\workspace\my_github\my-skills\   ← 唯一真相源（git，公开仓库）
         │
-        ├── ~/.workbuddy/skills/<skill>     ← junction
-        ├── ~/.claude/skills/<skill>        ← junction
-        ├── ~/.codex/skills/<skill>         ← junction
-        ├── ~/.zcode/skills/<skill>         ← junction
-        └── ~/.gemini/config/skills/<skill> ← junction
+        ├── ~/.workbuddy/skills/<skill>      ← junction（国内版）
+        ├── ~/.workbuddy-ai/skills/<skill>   ← junction（海外版，独立配置目录）
+        ├── ~/.claude/skills/<skill>         ← junction
+        ├── ~/.codex/skills/<skill>          ← junction
+        ├── ~/.zcode/skills/<skill>          ← junction
+        ├── ~/.gemini/config/skills/<skill>  ← junction (Gemini CLI)
+        └── ~/.gemini/config/skills.json     ← Antigravity 官方原生直挂主库
 ```
+
+**WorkBuddy 国内版与海外版是两个独立安装**，配置目录分别是 `~/.workbuddy` 和 `~/.workbuddy-ai`（程序在 `D:\Software\WorkBuddy` 与 `D:\Software\New folder\WorkBuddyAI`），技能目录互不相通，必须各自纳入 `agents` 配置。
 
 第三方技能（Kimi/Wind 官方、Academic pack、FBSir 等）同样落在该仓库，但由 `.gitignore` 的 `skillsync` 标记区块排除，不入公开仓库、不参与 README 校验。
 
@@ -45,11 +49,14 @@ python scripts/skillsync.py gitignore     # 刷新 .gitignore 第三方区块
 1. 在仓库建 `<skill>/SKILL.md`（frontmatter 必须有 `name` 与 `description`，`name` 与目录名一致）
 2. 进了 README 表格（CI 强制双向校验）
 3. `python scripts/skillsync.py link --apply` 分发到各 agent
-4. `python scripts/check_consistency.py` 校验后提交
+4. **Antigravity 侧**：因 `~/.gemini/config/skills.json` 已直挂主库根目录，主库新增技能重载窗口或新开会话即可自动识别；若新增技能未建在主库（放置在外部独立目录），必须同步加到 `~/.gemini/config/skills.json` 的 `entries` 列表中。
+5. `python scripts/check_consistency.py` 校验后提交
 
 **从某 agent 目录吸收新技能**：`python scripts/skillsync.py adopt --only <skill> --apply`。
 
 ## 已知坑位
+
+**Antigravity Windows 扫描机制**：Antigravity 底层在 Windows 下通过标准 `io/fs` 扫描，会跳过 `~/.gemini/config/skills/` 内部的二级 Junction 目录。因此 Antigravity 统一采用原生声明式配置 `~/.gemini/config/skills.json` 直接挂载主库真实路径，绕过子目录 Junction 限制。
 
 **链式链接**：junction 指向另一个 agent 的目录（如 workbuddy→zcode→codex）会造成三层套娃，中间一层挪动全断。所有链接必须直接指向仓库。`doctor` 会把这类问题全部列出。
 
