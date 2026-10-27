@@ -768,6 +768,89 @@ def cmd_gitignore(cfg, args):
     return 0
 
 
+# ---------------------------------------------------------------- rules
+
+RULE_BEGIN = "<!-- BEGIN skillsync-rules -->"
+RULE_END = "<!-- END skillsync-rules -->"
+
+DEFAULT_RULE_TARGETS = {
+    "claude": HOME / ".claude" / "CLAUDE.md",
+    "codex": HOME / ".codex" / "AGENTS.md",
+    "zcode": HOME / ".zcode" / "AGENTS.md",
+    "gemini": HOME / ".gemini" / "GEMINI.md",
+}
+
+
+def read_rule_block(hub):
+    """从主库 AGENTS.md 里取出规则区块。"""
+    src = Path(hub) / "AGENTS.md"
+    if not src.exists():
+        return None
+    text = src.read_text(encoding="utf-8")
+    i, j = text.find(RULE_BEGIN), text.find(RULE_END)
+    if i < 0 or j < 0:
+        return None
+    return text[i:j + len(RULE_END)]
+
+
+def cmd_rules(cfg, args):
+    """把主库 AGENTS.md 的规则区块分发到各 agent 的全局指令文件。
+
+    只维护标记区块，不碰文件里其他内容。旧版（没有标记、整篇都是规则）
+    会被整体替换，替换前自动备份。
+    """
+    apply = args.apply
+    block = read_rule_block(cfg["hub"])
+    if not block:
+        print(f"错误：在 {cfg['hub'] / 'AGENTS.md'} 里找不到规则标记区块")
+        return 2
+
+    targets = cfg.get("rules_targets") or DEFAULT_RULE_TARGETS
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    changed = 0
+
+    for name, path in targets.items():
+        path = Path(path)
+        if not path.parent.exists():
+            print(f"  [跳过] {name:<8} 目录不存在: {path.parent}")
+            continue
+
+        old = path.read_text(encoding="utf-8") if path.exists() else ""
+
+        if RULE_BEGIN in old and RULE_END in old:
+            i = old.find(RULE_BEGIN)
+            j = old.find(RULE_END) + len(RULE_END)
+            new = old[:i] + block + old[j:]
+            action = "更新区块"
+        elif old.strip() and "用户级技能库" in old:
+            # 旧版整篇都是规则，整体替换
+            new = "# 本机技能库与写作规则\n\n" + block + "\n"
+            action = "替换旧版"
+        elif old.strip():
+            new = old.rstrip() + "\n\n" + block + "\n"
+            action = "追加区块"
+        else:
+            new = block + "\n"
+            action = "新建"
+
+        if new == old:
+            print(f"  [无变化] {name:<8} {path}")
+            continue
+
+        print(f"  [{action}] {name:<8} {path}")
+        changed += 1
+        if apply:
+            if path.exists() and old.strip():
+                shutil.copy2(path, path.with_name(path.name + f".bak.{stamp}"))
+            path.write_text(new, encoding="utf-8")
+
+    if not apply:
+        print(f"\n预演：{changed} 个文件待写入。加 --apply 才落盘。")
+    else:
+        print(f"\n完成：{changed} 个文件已更新。")
+    return 0
+
+
 # ---------------------------------------------------------------- main
 
 def main():
@@ -795,6 +878,9 @@ def main():
 
     p = sub.add_parser("gitignore", help="刷新 .gitignore 的第三方技能区块")
 
+    p = sub.add_parser("rules", help="把主库 AGENTS.md 的规则分发到各 agent 全局文件")
+    p.add_argument("--apply", action="store_true")
+
     args = ap.parse_args()
     cfg = load_config()
     if args.hub:
@@ -802,7 +888,7 @@ def main():
 
     fn = {"status": cmd_status, "scan": cmd_scan, "doctor": cmd_doctor,
           "adopt": cmd_adopt, "link": cmd_link, "add": cmd_add,
-          "gitignore": cmd_gitignore}[args.cmd]
+          "gitignore": cmd_gitignore, "rules": cmd_rules}[args.cmd]
     return fn(cfg, args)
 
 
