@@ -1,14 +1,14 @@
 ---
 name: siyuan-kernel-ops
-description: Safely search, read, create, edit, move, and batch-process a local SiYuan knowledge base from WorkBuddy through SiYuan's Kernel HTTP API. Use when the user mentions SiYuan/思源笔记, notebooks, documents, blocks, backlinks, attributes, SQL/full-text search, daily notes, or asks WorkBuddy to organize or write back knowledge. Prefer block-level, idempotent edits; protect block IDs, references, assets, and user data.
-compatibility: WorkBuddy on Windows with Python 3 and local access to a running SiYuan desktop/kernel. The default workspace config is D:\MyData\Warehouse\siyuan-backup\conf\conf.json; SIYUAN_URL, SIYUAN_TOKEN, and SIYUAN_CONF may override it.
+description: Safely search, read, create, edit, move, and batch-process a local SiYuan knowledge base from an AI agent runtime through SiYuan's Kernel HTTP API. Use when the user mentions SiYuan/思源笔记, notebooks, documents, blocks, backlinks, attributes, SQL/full-text search, daily notes, or asks the agent to organize or write back knowledge. Prefer block-level, idempotent edits; protect block IDs, references, assets, and user data.
+compatibility: Any AI agent runtime (WorkBuddy, ZCode, Claude Code, …) on Windows with Python 3 and local access to a running SiYuan desktop/kernel. The default workspace config is D:\MyData\Warehouse\siyuan-backup\conf\conf.json; SIYUAN_URL, SIYUAN_TOKEN, and SIYUAN_CONF may override it.
 metadata:
-  version: "3.0.1"
-  target: "WorkBuddy + SiYuan"
-  changelog: "3.2.0 (2026-10-30) — added Q20: the user may edit the same doc while you operate on it; export the baseline immediately before surgery and verify both your markers and the user's markers afterwards. 3.1.0 (2026-10-27) — moved the 54-line connection helper into `scripts/sy.py` (tested, runnable smoke test); SKILL.md 291 → 245 lines. Q4 reduced to a pointer: formula detection/repair is owned solely by siyuan-markdown-formula-formatter, with a boundary note added there. 3.0.0 (2026-10-27) — length rewrite, 692 → 291 lines: removed the v3.7.3/v3.8.7 changelog sections, incident narratives, the duplicated endpoint list, project-internal gotcha IDs and the integration-map section; merged port/sandbox/loopback rules into §1; quirks renumbered Q1–Q19. Re-verified on v3.8.8."
+  version: "3.3.0"
+  target: "Agent runtimes + SiYuan"
+  changelog: "3.3.0 (2026-10-30) — whole-doc surgery extracted to scripts/siyuan_surgery.py (drain-aware Fix A, ZWSP-tolerant replace, dual-marker verify; live-tested); Q10 += removeDoc/removeDocByID and asset-dedupe traps; Q13 rewritten from new evidence (placeholder-p is the expected drained state); callout round-trip moved from Q20 to Q12; runtime branding generalized. Earlier releases (3.0–3.2): see git log."
 ---
 
-# WorkBuddy × SiYuan — kernel operations
+# Agent runtimes × SiYuan — kernel operations
 
 SiYuan is a **block graph**, not a folder of Markdown files. Block IDs, references, attributes, assets and backlinks are the user's data — protect them. Work through the Kernel HTTP API; never write `.sy`, SQLite, indexes or `conf.json`.
 
@@ -28,7 +28,7 @@ Precedence: `SIYUAN_URL` + `SIYUAN_TOKEN` → `SIYUAN_CONF` → `D:\MyData\Wareh
 
 The Kernel API is plain HTTP `POST` + JSON. Use Python with `ensure_ascii=False` — Git Bash mangles Chinese inside inline `curl -d '{"data":"中文"}'`.
 
-**Use the tested helper shipped with this skill: `scripts/sy.py`.** `connect()` returns `(base, token)` after authenticating against a live kernel; `call(base, token, path, payload)` posts JSON and raises on `code != 0`. Both are already correct about port discovery, token rotation and encoding — do not re-implement them.
+**Use the tested helpers shipped with this skill: `scripts/sy.py`** — `connect()` returns `(base, token)` after authenticating against a live kernel; `call(base, token, path, payload)` posts JSON and raises on `code != 0`. Both are already correct about port discovery, token rotation and encoding — do not re-implement them. **For whole-document surgery use `scripts/siyuan_surgery.py`** (baseline export → ZWSP-tolerant replacement → drain-aware Fix A → dual-marker verification; see Q1/Q13/Q20) — it encodes the traps below as code, so don't re-derive them per session.
 
 ```python
 import sys; sys.path.insert(0, r"<skill dir>/scripts")
@@ -104,7 +104,7 @@ Use `dataType: "markdown"` unless you need exact DOM. Let the kernel mint IDs fo
 
 1. Resolve the exact ID and hpath.
 2. Read the before-state.
-3. Preflight: skip if already correct; detect duplicates by normalized content or a `custom-workbuddy-op=<id>` attribute.
+3. Preflight: skip if already correct; detect duplicates by normalized content or an idempotency attribute (`custom-agent-op=<id>`; older docs may carry `custom-workbuddy-op`).
 4. Write **exactly once**, require `code == 0`.
 5. Read the after-state from `getChildBlocks` (live) and assert the postcondition — correct block/path, exact content, neighbours intact, no duplicate.
 
@@ -148,6 +148,10 @@ Every entry below cost real debugging or real data loss. Each is a **still-curre
 | Request times out right after a reload | Q17 |
 | `Field [parentID] is required` | Q18 |
 | Fresh doc still starts with a blank line | Q19 |
+| `removeDoc` reports `block not found` | Q10 |
+| Asset link points at a file that isn't there | Q10 |
+| Doc won't drain to zero children while rebuilding | Q13 |
+| Your edits and the user's newer manual edits race | Q20 |
 
 **Q1 · `updateBlock(rootId, markdown)` MERGES, it does not replace.** Old children survive alongside the new ones — re-export looks unchanged, `getChildBlocks` shows both. Fix A: delete every child ID first, then `updateBlock(rootId, markdown)`. Fix B (nuclear, changes the doc ID): `removeDocByID` + `createDocWithMd`. Stale blocks are the ones whose `updated="<ts>"` equals the doc's original creation timestamp.
 
@@ -175,13 +179,15 @@ Every entry below cost real debugging or real data loss. Each is a **still-curre
 - `/api/filetree/getDocInfo` is 404 — use `getHPathByID` + `getBlockInfo`.
 - `/api/filetree/listDocsByPath` requires `{notebook, path}`.
 - `asset/upload` is multipart with field **`file[]`**.
+- Use `/api/filetree/removeDocByID` `{id}` for deletion — path-based `/api/filetree/removeDoc` reports `block not found` no matter how you spell the path (ID / hpath / `.sy` all fail).
+- `asset/upload` on a filename that already exists in `assets/` does **not** upload a copy — `succMap` returns the existing asset's real path (timestamp suffix included). Rewrite links to that returned name, never the original; the names differ from what you sent.
 - **`getChildBlocks` returns a container's `markdown` including all nested children**, so a content/asset substring can match the *container* — and deleting it wipes the whole pasted article. Before any `deleteBlock`, assert `type` is a leaf (`p`/`t`/`l`/`h`/`c`/`m`).
 
 **Q11 · Moving and ordering.** `moveBlock` (camelCase — `move_block` is 404) takes `{id, parentID, previousID}` and places the block after `previousID`; move a run block-by-block, feeding each previous ID forward. `exportMdContent` can briefly return `data: None` after a move burst — transient index rebuild, retry (4 × 3 s) instead of reporting failure. A U+200B in exported Markdown is usually Lute's inline-node guard, not dirty data: if the stored markdown has none, don't "clean" it.
 
-**Q12 · `updateBlock` keeps only the FIRST block** of multi-block markdown, silently. One block per call; anything larger goes through `insertBlock` (which splits headings/code/tables/lists) or `appendBlock`. Editing an `h` needs the `#`-prefix and an `m` needs `$$` wrapping. Every heading level reports `type == "h"` — the level lives only in the `#` count — and headings are siblings under the root, so level shifts mean rewriting each one.
+**Q12 · `updateBlock` keeps only the FIRST block** of multi-block markdown, silently. One block per call; anything larger goes through `insertBlock` (which splits headings/code/tables/lists) or `appendBlock`, or goes through the whole-doc Fix A pipeline (`scripts/siyuan_surgery.py`). Editing an `h` needs the `#`-prefix and an `m` needs `$$` wrapping. Every heading level reports `type == "h"` — the level lives only in the `#` count — and headings are siblings under the root, so level shifts mean rewriting each one. Callout annotations round-trip losslessly: a `> [!NOTE]` blockquote parsed by `createDocWithMd`/`updateBlock` lands as a callout block (SiYuan's `/note`).
 
-**Q13 · Batch rebuild degrades above ~20 children.** Fix A's delete loop partially fails at scale (every call `code:0`, 56–85 % of blocks survive). Above ~20 children go straight to Fix B, or chunk with a live re-read between chunks. Never write `while getChildBlocks(): delete…` — SiYuan regenerates one empty `p` and the loop never ends. Persist any new doc ID; a lost ID makes a successful rebuild look like a vanished document.
+**Q13 · Rebuild drains to a placeholder, and large deletes can silently half-fail.** After deleting all children SiYuan regenerates exactly one zero-length `p` — that placeholder (or truly empty) is the drained state to wait for; a strict "must be zero children" loop never terminates. The delete loop itself has been observed to partially fail at scale (every call `code:0`, 56–85 % of blocks surviving), though a 163-child delete+rebuild has also succeeded in full — treat scale behaviour as unreliable and always re-read after deleting: survivors (beyond the placeholder) get deleted again before `updateBlock`; `scripts/siyuan_surgery.py` implements exactly this. Never write `while getChildBlocks(): delete…` blindly. When preserving the doc ID matters less than correctness, skip Fix A for Fix B (`removeDocByID` + `createDocWithMd`). Persist any new doc ID; a lost ID makes a successful rebuild look like a vanished document.
 
 **Q14 · Hand-built tables: the pipe is both separator and attribute prefix.** Cells carry `|{: style="…"}cell`; naive concatenation yields `||`, parsed as an extra empty column. Build as `"|" + "|".join(S + c for c in cells) + "|"`, separator row `"|" + "|".join(" :---: " for _ in cells) + "|"`. Blank lines between rows make each row a separate paragraph — the doc then reports zero table blocks. Assert the table-block count matches the source.
 
@@ -195,7 +201,7 @@ Every entry below cost real debugging or real data loss. Each is a **still-curre
 
 **Q19 · A new document holds a zero-length `p` that regenerates if you delete it early.** Order: `appendBlock` → `getChildBlocks` → if `children[0]` is an empty `p`, delete that one ID → re-read to confirm the real first block leads. Same for `createDocWithMd` output.
 
-**Q20 · The user may be editing the same doc while you operate on it.** A manual edit that lands between your `exportMdContent` baseline and the delete+rebuild gets overwritten, and the user's client can then sync its newer tree back — end state can mix both. Export the baseline immediately before surgery, not at session start; afterwards verify a fresh export for BOTH your marker strings and the user's content markers (their newest note, their added sections). Missing user markers = the client version was newer than your baseline; redo from a fresh export. Also `> [!NOTE]` blockquotes round-trip through `createDocWithMd`/`updateBlock` as callout blocks, so whole-doc rebuilds preserve SiYuan's `/note` annotations.
+**Q20 · The user may be editing the same doc while you operate on it.** A manual edit that lands between your `exportMdContent` baseline and the delete+rebuild gets overwritten, and the user's client can then sync its newer tree back — end state can mix both. Export the baseline immediately before surgery, not at session start; afterwards verify a fresh export for BOTH your marker strings and the user's content markers (their newest note, their added sections). Missing user markers = the client version was newer than your baseline; redo from a fresh export. `verify_markers` in `scripts/siyuan_surgery.py` implements the dual-marker check.
 
 > Renumbered in v3.0.0: older notes citing §12.x map to Q1–Q19 in order (§12.5/§12.20 merged into §1, §12.12 into Q10).
 
