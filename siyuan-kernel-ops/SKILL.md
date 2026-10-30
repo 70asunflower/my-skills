@@ -5,7 +5,7 @@ compatibility: WorkBuddy on Windows with Python 3 and local access to a running 
 metadata:
   version: "3.0.1"
   target: "WorkBuddy + SiYuan"
-  changelog: "3.1.0 (2026-10-27) — moved the 54-line connection helper into `scripts/sy.py` (tested, runnable smoke test); SKILL.md 291 → 245 lines. Q4 reduced to a pointer: formula detection/repair is owned solely by siyuan-markdown-formula-formatter, with a boundary note added there. 3.0.0 (2026-10-27) — length rewrite, 692 → 291 lines: removed the v3.7.3/v3.8.7 changelog sections, incident narratives, the duplicated endpoint list, project-internal gotcha IDs and the integration-map section; merged port/sandbox/loopback rules into §1; quirks renumbered Q1–Q19. Re-verified on v3.8.8."
+  changelog: "3.2.0 (2026-10-30) — added Q20: the user may edit the same doc while you operate on it; export the baseline immediately before surgery and verify both your markers and the user's markers afterwards. 3.1.0 (2026-10-27) — moved the 54-line connection helper into `scripts/sy.py` (tested, runnable smoke test); SKILL.md 291 → 245 lines. Q4 reduced to a pointer: formula detection/repair is owned solely by siyuan-markdown-formula-formatter, with a boundary note added there. 3.0.0 (2026-10-27) — length rewrite, 692 → 291 lines: removed the v3.7.3/v3.8.7 changelog sections, incident narratives, the duplicated endpoint list, project-internal gotcha IDs and the integration-map section; merged port/sandbox/loopback rules into §1; quirks renumbered Q1–Q19. Re-verified on v3.8.8."
 ---
 
 # WorkBuddy × SiYuan — kernel operations
@@ -194,6 +194,8 @@ Every entry below cost real debugging or real data loss. Each is a **still-curre
 **Q18 · Write-endpoint parameters are not uniform.** `appendBlock`/`prependBlock` require **`parentID`**; `id` is not an alias (`Field [parentID] is required`). `insertBlock` needs one of `parentID`/`previousID`/`nextID`. `updateBlock`/`moveBlock` take `id`. **Probe instead of guessing** — POST `{}` and read the `Field [...] is required` message; validation runs before the write, so the probe is free and survives version upgrades that rename a parameter. `appendBlock` does split multi-block markdown correctly (one call took 130 blocks: 23 headings, 6 tables, 39 lists, a quote, a code fence).
 
 **Q19 · A new document holds a zero-length `p` that regenerates if you delete it early.** Order: `appendBlock` → `getChildBlocks` → if `children[0]` is an empty `p`, delete that one ID → re-read to confirm the real first block leads. Same for `createDocWithMd` output.
+
+**Q20 · The user may be editing the same doc while you operate on it.** A manual edit that lands between your `exportMdContent` baseline and the delete+rebuild gets overwritten, and the user's client can then sync its newer tree back — end state can mix both. Export the baseline immediately before surgery, not at session start; afterwards verify a fresh export for BOTH your marker strings and the user's content markers (their newest note, their added sections). Missing user markers = the client version was newer than your baseline; redo from a fresh export. Also `> [!NOTE]` blockquotes round-trip through `createDocWithMd`/`updateBlock` as callout blocks, so whole-doc rebuilds preserve SiYuan's `/note` annotations.
 
 > Renumbered in v3.0.0: older notes citing §12.x map to Q1–Q19 in order (§12.5/§12.20 merged into §1, §12.12 into Q10).
 
